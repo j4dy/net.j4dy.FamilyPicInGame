@@ -8,7 +8,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "net.j4dy.familypicingame"
+        applicationId "net.j4dy.FamilyPicInGame"
         minSdk 24
         targetSdk 34
         versionCode 1
