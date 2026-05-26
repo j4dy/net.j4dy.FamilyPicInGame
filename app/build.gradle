@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.familyface.games'
+    namespace 'net.j4dy.familypicingame'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.familyface.games"
+        applicationId "net.j4dy.familypicingame"
         minSdk 24
         targetSdk 34
         versionCode 1

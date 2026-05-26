@@ -1,4 +1,4 @@
-package com.familyface.games.ui.theme
+package net.j4dy.familypicingame.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

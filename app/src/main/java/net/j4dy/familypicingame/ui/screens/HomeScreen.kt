@@ -1,4 +1,4 @@
-package com.familyface.games.ui.screens
+package net.j4dy.familypicingame.ui.screens
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -22,15 +22,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.familyface.games.data.FaceStorage
-import com.familyface.games.games.GameDescriptor
-import com.familyface.games.ui.theme.CardSlate
-import com.familyface.games.ui.theme.CyberPurple
-import com.familyface.games.ui.theme.DeepDarkBlue
-import com.familyface.games.ui.theme.ElectricCyan
-import com.familyface.games.ui.theme.IcyWhite
-import com.familyface.games.ui.theme.NeonPink
-import com.familyface.games.ui.theme.SoftGrey
+import net.j4dy.familypicingame.data.FaceStorage
+import net.j4dy.familypicingame.games.GameDescriptor
+import net.j4dy.familypicingame.ui.theme.CardSlate
+import net.j4dy.familypicingame.ui.theme.CyberPurple
+import net.j4dy.familypicingame.ui.theme.DeepDarkBlue
+import net.j4dy.familypicingame.ui.theme.ElectricCyan
+import net.j4dy.familypicingame.ui.theme.IcyWhite
+import net.j4dy.familypicingame.ui.theme.NeonPink
+import net.j4dy.familypicingame.ui.theme.SoftGrey
 import kotlinx.coroutines.delay
 
 @Composable

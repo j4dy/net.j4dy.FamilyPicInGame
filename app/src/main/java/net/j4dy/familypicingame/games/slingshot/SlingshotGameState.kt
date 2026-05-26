@@ -1,13 +1,13 @@
-package com.familyface.games.games.slingshot
+package net.j4dy.familypicingame.games.slingshot
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import com.familyface.games.games.common.Vector2D
-import com.familyface.games.model.FaceProfile
-import com.familyface.games.ui.theme.NeonPink
+import net.j4dy.familypicingame.games.common.Vector2D
+import net.j4dy.familypicingame.model.FaceProfile
+import net.j4dy.familypicingame.ui.theme.NeonPink
 import java.util.Random
 
 // Represents explosion particle effects

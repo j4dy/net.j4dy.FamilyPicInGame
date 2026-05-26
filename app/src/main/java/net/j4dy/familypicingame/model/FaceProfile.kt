@@ -1,4 +1,4 @@
-package com.familyface.games.model
+package net.j4dy.familypicingame.model
 
 data class FaceProfile(
     val id: String,

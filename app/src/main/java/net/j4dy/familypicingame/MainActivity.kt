@@ -1,4 +1,4 @@
-package com.familyface.games
+package net.j4dy.familypicingame
 
 import android.content.pm.ActivityInfo
 import android.net.Uri
@@ -15,13 +15,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.familyface.games.games.GameDescriptor
-import com.familyface.games.games.slingshot.SlingshotGameScreen
-import com.familyface.games.games.snake.SnakeGameScreen
-import com.familyface.games.ui.screens.FaceCropScreen
-import com.familyface.games.ui.screens.FaceManagerScreen
-import com.familyface.games.ui.screens.HomeScreen
-import com.familyface.games.ui.theme.FamilyPicInGameTheme
+import net.j4dy.familypicingame.games.GameDescriptor
+import net.j4dy.familypicingame.games.slingshot.SlingshotGameScreen
+import net.j4dy.familypicingame.games.snake.SnakeGameScreen
+import net.j4dy.familypicingame.ui.screens.FaceCropScreen
+import net.j4dy.familypicingame.ui.screens.FaceManagerScreen
+import net.j4dy.familypicingame.ui.screens.HomeScreen
+import net.j4dy.familypicingame.ui.theme.FamilyPicInGameTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

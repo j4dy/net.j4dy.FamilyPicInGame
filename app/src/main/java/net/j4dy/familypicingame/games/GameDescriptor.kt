@@ -1,4 +1,4 @@
-package com.familyface.games.games
+package net.j4dy.familypicingame.games
 
 data class GameDescriptor(
     val id: String,

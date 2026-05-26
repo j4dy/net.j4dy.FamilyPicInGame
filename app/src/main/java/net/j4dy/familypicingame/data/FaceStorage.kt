@@ -1,4 +1,4 @@
-package com.familyface.games.data
+package net.j4dy.familypicingame.data
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -8,7 +8,7 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
-import com.familyface.games.model.FaceProfile
+import net.j4dy.familypicingame.model.FaceProfile
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File

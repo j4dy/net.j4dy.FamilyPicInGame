@@ -1,4 +1,4 @@
-package com.familyface.games.ui.theme
+package net.j4dy.familypicingame.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme

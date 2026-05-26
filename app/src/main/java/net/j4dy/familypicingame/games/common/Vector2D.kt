@@ -1,4 +1,4 @@
-package com.familyface.games.games.common
+package net.j4dy.familypicingame.games.common
 
 data class Vector2D(val x: Float = 0f, val y: Float = 0f) {
     operator fun plus(other: Vector2D) = Vector2D(x + other.x, y + other.y)

@@ -1,11 +1,11 @@
-package com.familyface.games.games.snake
+package net.j4dy.familypicingame.games.snake
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.familyface.games.games.common.Vector2D
-import com.familyface.games.model.FaceProfile
+import net.j4dy.familypicingame.games.common.Vector2D
+import net.j4dy.familypicingame.model.FaceProfile
 import java.util.Random
 
 enum class SnakeDirection {
