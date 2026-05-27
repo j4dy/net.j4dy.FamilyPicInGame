@@ -100,3 +100,21 @@ To support seamless additions of new games, the codebase uses a clean, feature-b
 3. Wait for the IDE to sync the Gradle build files. It uses **Gradle 8.6** and **Kotlin 1.9.22** (pre-loaded inside the Gradle wrapper configurations).
 4. Connect an Android device (USB Debugging enabled) or start a Virtual Device (AVD Emulator).
 5. Click the **Run** green arrow button (`Shift + F10`) to deploy and play!
+
+---
+
+## 🔒 Privacy Policy
+
+**Family Pic-in-Game** is built with your privacy as our absolute highest priority. 
+
+### 1. 100% Local Processing (On-Device)
+* **No Server Uploads**: Every image you pick, crop, or process remains **entirely on your local physical device**. We do not run any cloud servers, databases, or external APIs to upload or store your family photos.
+* **No Analytics or Tracking**: We do not integrate any tracking SDKs, advertising IDs, analytics platforms, or profiling cookies. Your gameplay data, selected names, and high scores stay 100% offline.
+
+### 2. Modern Permissionless Image Access
+* **Privacy-Friendly Photo Picker**: The app integrates Android's modern out-of-process Photo Picker (`PickVisualMedia`).
+* **Zero Invasive Permissions**: Unlike older apps, **Family Pic-in-Game does NOT ask for or require device-wide read/write permissions to your gallery or files**. The Android operating system isolatedly grants temporary, secure access only to the single photo you explicitly tap and select.
+
+### 3. Data Deletion
+* **Instant Removal**: You have absolute control. If you delete a custom family profile card inside the **Face Manager**, the associated cropped PNG file and its name entry are permanently deleted from your device's private application storage immediately.
+* **Uninstall Cleanse**: Uninstalling the application automatically and completely wipes all stored face profiles and settings from your device.
