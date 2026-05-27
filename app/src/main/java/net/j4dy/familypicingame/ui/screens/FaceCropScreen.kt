@@ -24,6 +24,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +69,7 @@ fun FaceCropScreen(
     // Transform states for cropping
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    var canvasSize by remember { mutableStateOf(Size.Zero) }
 
     BackHandler {
         onBackClick()
@@ -133,6 +135,9 @@ fun FaceCropScreen(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color(0xFF0F1424))
+                        .onSizeChanged { intSize ->
+                            canvasSize = Size(intSize.width.toFloat(), intSize.height.toFloat())
+                        }
                         .pointerInput(Unit) {
                             detectTransformGestures { _, panDrag, zoomMultiplier, _ ->
                                 scale = (scale * zoomMultiplier).coerceIn(0.5f, 5.0f)
@@ -245,7 +250,7 @@ fun FaceCropScreen(
                             // Extract crop and save
                             val b = bitmap
                             if (b != null) {
-                                val cropped = cropBitmapNatively(b, scale, offset, nameText, context)
+                                val cropped = cropBitmapNatively(b, scale, offset, canvasSize.width, canvasSize.height)
                                 if (cropped != null) {
                                     faceStorage.addProfile(nameText.trim(), cropped)
                                     onCropSuccess()
@@ -276,58 +281,66 @@ private fun cropBitmapNatively(
     src: Bitmap,
     gestureScale: Float,
     gestureOffset: Offset,
-    name: String,
-    context: Context
+    canvasWidth: Float,
+    canvasHeight: Float
 ): Bitmap? {
     try {
         // A standard crop dimension (e.g. 256x256 makes a perfect avatar)
         val size = 256
         val croppedOutput = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = android.graphics.Canvas(croppedOutput)
-        val paint = android.graphics.Paint().apply { isAntiAlias = true }
-
-        // We need to replicate what was rendered in the Compose Canvas.
-        // Let's assume the Canvas was, say, 800x800 or whatever aspect ratio.
-        // To make it fully stable without relying on Canvas dimensions:
-        // We will project the center crop:
-        val srcWidth = src.width.toFloat()
-        val srcHeight = src.height.toFloat()
         
-        // Compute base scale as if viewport was 800px square
-        val viewportSize = 800f
-        val baseScale = Math.min(viewportSize / srcWidth, viewportSize / srcHeight)
+        // Paint setup with anti-aliasing and bitmap filtering for smooth crops
+        val paint = android.graphics.Paint().apply { 
+            isAntiAlias = true 
+            isFilterBitmap = true
+        }
+
+        val widthVal = if (canvasWidth > 0f) canvasWidth else 800f
+        val heightVal = if (canvasHeight > 0f) canvasHeight else 800f
+
+        val circleRadius = Math.min(widthVal, heightVal) * 0.35f
+        val centerX = widthVal / 2f
+        val centerY = heightVal / 2f
+
+        val imgWidth = src.width.toFloat()
+        val imgHeight = src.height.toFloat()
+
+        // Replicate base scale and final scale from preview
+        val baseScale = Math.min(widthVal / imgWidth, heightVal / imgHeight)
         val finalScale = baseScale * gestureScale
-        
-        // Offset mapping to source coordinates
-        // Under viewportSize, crop window is a circle at center (400, 400) of radius 280 (0.35f * 800)
-        // Center offset relative to source
-        val scaleMatrix = Matrix()
-        
-        // We translate source so it's centered, then scale it, then apply user offsets
-        val baseTranslateX = (viewportSize - srcWidth * finalScale) / 2f + gestureOffset.x
-        val baseTranslateY = (viewportSize - srcHeight * finalScale) / 2f + gestureOffset.y
-        
-        // We want to extract a 280px radius circle centered at 400,400.
-        // Let's draw it onto our 256x256 canvas:
-        // We maps (400, 400) of viewport to (128, 128) of cropped output.
-        // Scaling factor from viewport to crop size: 256f / (viewportSize * 0.70f) -> 256 / 560
-        val cropRadius = viewportSize * 0.35f // 280
-        val cropToOutputScale = size.toFloat() / (cropRadius * 2f) // 256 / 560
-        
-        val transform = Matrix()
-        // 1. Center photo relative to viewport center
-        transform.postTranslate(-srcWidth / 2f, -srcHeight / 2f)
-        // 2. Scale by gesture zoom
-        transform.postScale(finalScale, finalScale)
-        // 3. Translate by gesture offset
-        transform.postTranslate(gestureOffset.x, gestureOffset.y)
-        // 4. Align viewport center (0,0 now) to crop center
-        // 5. Scale down to output 256px size
-        transform.postScale(cropToOutputScale, cropToOutputScale)
-        // 6. Center in the output bitmap
-        transform.postTranslate(size / 2f, size / 2f)
 
+        val drawWidth = imgWidth * finalScale
+        val drawHeight = imgHeight * finalScale
+
+        // Replicate initial centering start coords
+        val startX = (widthVal - drawWidth) / 2f + gestureOffset.x
+        val startY = (heightVal - drawHeight) / 2f + gestureOffset.y
+
+        val transform = Matrix()
+        // 1. Position and scale image exactly as visually laid out on physical screen
+        transform.postScale(finalScale, finalScale)
+        transform.postTranslate(startX, startY)
+
+        // 2. Shift center of physical screen's crop circle to (0, 0)
+        transform.postTranslate(-centerX, -centerY)
+
+        // 3. Scale crop circle radius to output bitmap's radius (128f)
+        val cropScale = 128f / circleRadius
+        transform.postScale(cropScale, cropScale)
+
+        // 4. Translate center (0, 0) to output bitmap's center (128f, 128f)
+        transform.postTranslate(128f, 128f)
+
+        // Clean slate and clear
         canvas.drawColor(android.graphics.Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR)
+        
+        // Clip to circular crop path so everything outside the 128px radius circle is transparent
+        val clipPath = android.graphics.Path().apply {
+            addCircle(128f, 128f, 128f, android.graphics.Path.Direction.CW)
+        }
+        canvas.clipPath(clipPath)
+        
         canvas.drawBitmap(src, transform, paint)
         
         return croppedOutput
