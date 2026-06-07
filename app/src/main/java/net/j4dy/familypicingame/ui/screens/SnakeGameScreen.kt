@@ -258,9 +258,9 @@ fun SnakeGameScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text("Score: ${gameState.score}", color = ElectricCyan, fontWeight = FontWeight.Black, fontSize = 18.sp)
-                                Text(gameState.gameMessage, color = IcyWhite, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                Text(gameState.gameMessage, color = IcyWhite, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                             }
                             
                             if (gameState.isGameOver) {
@@ -272,7 +272,7 @@ fun SnakeGameScreen(
                                 ) {
                                     Icon(Icons.Default.Refresh, contentDescription = "Restart", tint = Color.White, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("RETRY", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("RETRY", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                 }
                             }
                         }
