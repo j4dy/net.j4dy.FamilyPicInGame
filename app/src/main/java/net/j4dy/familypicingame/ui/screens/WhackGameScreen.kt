@@ -7,6 +7,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.j4dy.familypicingame.data.FaceStorage
+import net.j4dy.familypicingame.games.slingshot.RoleAvatarItem
 import net.j4dy.familypicingame.ui.theme.CardSlate
 import net.j4dy.familypicingame.ui.theme.CyberPurple
 import net.j4dy.familypicingame.ui.theme.DeepDarkBlue
@@ -56,185 +59,304 @@ fun WhackGameScreen(
 ) {
     val context = LocalContext.current
     val faceStorage = remember { FaceStorage(context) }
-    // Get profiles excluding defaults if possible, but standard includes defaults anyway
     val profiles = remember { faceStorage.getProfiles() }
     
-    val gameState = remember { WhackGameState(profiles) }
-    var canvasSize by remember { mutableStateOf(Size.Zero) }
-
-    // Game loops: Timer loop (1s) and render frame loop (16ms)
-    LaunchedEffect(gameState, gameState.isPlaying, gameState.isGameOver) {
-        if (gameState.isPlaying && !gameState.isGameOver) {
-            while (true) {
-                gameState.tickFrame()
-                delay(16)
-            }
-        }
-    }
+    var gameStarted by remember { mutableStateOf(false) }
+    var teamA by remember { mutableStateOf(setOf<String>()) } // Teammates (avoid)
+    var teamB by remember { mutableStateOf(setOf<String>()) } // Opponents (whack)
     
-    LaunchedEffect(gameState, gameState.isPlaying, gameState.isGameOver) {
-        if (gameState.isPlaying && !gameState.isGameOver) {
-            while (true) {
-                delay(1000)
-                gameState.tickSecond()
-            }
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Whack-a-Monster", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = IcyWhite)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { gameState.resetGame() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = ElectricCyan)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepDarkBlue)
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(DeepDarkBlue)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Header stats HUD
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text("SCORE", color = SoftGrey, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                    Text("${gameState.score}", color = ElectricCyan, fontSize = 22.sp, fontWeight = FontWeight.Black)
-                }
-                
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("TIME LEFT", color = SoftGrey, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                    Text("${gameState.timeLeftSeconds}s", color = if (gameState.timeLeftSeconds <= 10) NeonPink else IcyWhite, fontSize = 22.sp, fontWeight = FontWeight.Black)
-                }
-            }
-
-            // Time progress bar
-            LinearProgressIndicator(
-                progress = gameState.timeLeftSeconds / 45f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = if (gameState.timeLeftSeconds <= 10) NeonPink else ElectricCyan,
-                trackColor = CyberPurple.copy(alpha = 0.2f)
-            )
-
-            // Game Play Grid with Tap Coordinates
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(1.dp, CyberPurple.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-                    .background(Color(0xFF090D1E))
-                    .onSizeChanged { size ->
-                        canvasSize = Size(size.width.toFloat(), size.height.toFloat())
-                    }
-                    .pointerInput(gameState) {
-                        detectTapGestures(
-                            onTap = { offset ->
-                                val cellW = canvasSize.width / 3f
-                                val cellH = canvasSize.height / 3f
-                                val col = (offset.x / cellW).toInt().coerceIn(0, 2)
-                                val row = (offset.y / cellH).toInt().coerceIn(0, 2)
-                                val index = row * 3 + col
-                                gameState.whackCell(index)
-                            }
-                        )
+    if (!gameStarted) {
+        // Selection Screen
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Setup Whack Teams", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = IcyWhite)
+                        }
                     },
-                contentAlignment = Alignment.Center
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepDarkBlue)
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(DeepDarkBlue)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                WhackGameCanvas(state = gameState, modifier = Modifier.fillMaxSize())
-                
-                // Play overlay
-                if (!gameState.isPlaying) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.6f))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "ASSIGN GAME TEAMS",
+                        color = ElectricCyan,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+
+                    // Team A (Teammates) Selector
+                    Text("Select Teammates (Team A - Do NOT Tap):", color = IcyWhite, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            if (gameState.isGameOver) "GAME OVER" else "WHACK-A-MONSTER",
-                            color = if (gameState.isGameOver) NeonPink else ElectricCyan,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Text(
-                            if (gameState.isGameOver) "Final Score: ${gameState.score}" else "Tap aliens. Do NOT tap your family!",
-                            color = IcyWhite,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 24.dp)
-                        )
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        Button(
-                            onClick = { gameState.startGame() },
-                            colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Start", tint = Color.White)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (gameState.isGameOver) "PLAY AGAIN" else "START MISSION", fontWeight = FontWeight.Bold)
+                        items(profiles) { profile ->
+                            RoleAvatarItem(
+                                profile = profile,
+                                isSelected = profile.id in teamA,
+                                color = ElectricCyan,
+                                onClick = {
+                                    val id = profile.id
+                                    if (id in teamA) {
+                                        teamA = teamA - id
+                                    } else {
+                                        teamA = teamA + id
+                                        teamB = teamB - id // exclusive mapping
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Team B (Opponents) Selector
+                    Text("Select Opponents (Team B - Whack Them!):", color = IcyWhite, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(profiles) { profile ->
+                            RoleAvatarItem(
+                                profile = profile,
+                                isSelected = profile.id in teamB,
+                                color = NeonPink,
+                                onClick = {
+                                    val id = profile.id
+                                    if (id in teamB) {
+                                        teamB = teamB - id
+                                    } else {
+                                        teamB = teamB + id
+                                        teamA = teamA - id // exclusive mapping
+                                    }
+                                }
+                            )
                         }
                     }
                 }
+
+                Button(
+                    onClick = {
+                        if (teamA.isNotEmpty() && teamB.isNotEmpty()) {
+                            gameStarted = true
+                        }
+                    },
+                    enabled = teamA.isNotEmpty() && teamB.isNotEmpty(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = NeonPink,
+                        disabledContainerColor = SoftGrey.copy(alpha = 0.3f),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("LAUNCH CHALLENGE", fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                }
             }
+        }
+    } else {
+        // Game Playing Screen
+        val gameState = remember(teamA, teamB) {
+            WhackGameState(
+                teamAProfiles = profiles.filter { it.id in teamA },
+                teamBProfiles = profiles.filter { it.id in teamB }
+            )
+        }
+        var canvasSize by remember { mutableStateOf(Size.Zero) }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        // Game loops: Timer loop (1s) and render frame loop (16ms)
+        LaunchedEffect(gameState, gameState.isPlaying, gameState.isGameOver) {
+            if (gameState.isPlaying && !gameState.isGameOver) {
+                while (true) {
+                    gameState.tickFrame()
+                    delay(16)
+                }
+            }
+        }
+        
+        LaunchedEffect(gameState, gameState.isPlaying, gameState.isGameOver) {
+            if (gameState.isPlaying && !gameState.isGameOver) {
+                while (true) {
+                    delay(1000)
+                    gameState.tickSecond()
+                }
+            }
+        }
 
-            // Footer HUD
-            Card(
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Teammates vs Opponents", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { gameStarted = false }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = IcyWhite)
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { gameState.resetGame() }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = ElectricCyan)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepDarkBlue)
+                )
+            }
+        ) { padding ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, CyberPurple.copy(alpha = 0.2f), RoundedCornerShape(20.dp)),
-                colors = CardDefaults.cardColors(containerColor = CardSlate.copy(alpha = 0.9f)),
-                shape = RoundedCornerShape(20.dp)
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(DeepDarkBlue)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Header stats HUD
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("COMBO", color = SoftGrey, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                        Text("x${gameState.comboMultiplier}", color = ElectricCyan, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        Text("SCORE", color = SoftGrey, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Text("${gameState.score}", color = ElectricCyan, fontSize = 22.sp, fontWeight = FontWeight.Black)
                     }
-                    Text(
-                        gameState.gameMessage,
-                        color = IcyWhite,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.End,
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f).padding(start = 12.dp)
-                    )
+                    
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("TIME LEFT", color = SoftGrey, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Text("${gameState.timeLeftSeconds}s", color = if (gameState.timeLeftSeconds <= 10) NeonPink else IcyWhite, fontSize = 22.sp, fontWeight = FontWeight.Black)
+                    }
+                }
+
+                // Time progress bar
+                LinearProgressIndicator(
+                    progress = gameState.timeLeftSeconds / 45f,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = if (gameState.timeLeftSeconds <= 10) NeonPink else ElectricCyan,
+                    trackColor = CyberPurple.copy(alpha = 0.2f)
+                )
+
+                // Game Play Grid with Tap Coordinates
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, CyberPurple.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                        .background(Color(0xFF090D1E))
+                        .onSizeChanged { size ->
+                            canvasSize = Size(size.width.toFloat(), size.height.toFloat())
+                        }
+                        .pointerInput(gameState) {
+                            detectTapGestures(
+                                onTap = { offset ->
+                                    val cellW = canvasSize.width / 3f
+                                    val cellH = canvasSize.height / 3f
+                                    val col = (offset.x / cellW).toInt().coerceIn(0, 2)
+                                    val row = (offset.y / cellH).toInt().coerceIn(0, 2)
+                                    val index = row * 3 + col
+                                    gameState.whackCell(index)
+                                }
+                            )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    WhackGameCanvas(state = gameState, modifier = Modifier.fillMaxSize())
+                    
+                    // Play overlay
+                    if (!gameState.isPlaying) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.6f))
+                        ) {
+                            Text(
+                                if (gameState.isGameOver) "GAME OVER" else "TEAM WHACK CHALLENGE",
+                                color = if (gameState.isGameOver) NeonPink else ElectricCyan,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                if (gameState.isGameOver) "Final Score: ${gameState.score}" else "Whack Opponents (Neon Pink).\nDo NOT tap Teammates (Electric Cyan)!",
+                                color = IcyWhite,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+                            
+                            Spacer(modifier = Modifier.height(24.dp))
+                            
+                            Button(
+                                onClick = { gameState.startGame() },
+                                colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Start", tint = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(if (gameState.isGameOver) "PLAY AGAIN" else "START MATCH", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Footer HUD
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, CyberPurple.copy(alpha = 0.2f), RoundedCornerShape(20.dp)),
+                    colors = CardDefaults.cardColors(containerColor = CardSlate.copy(alpha = 0.9f)),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("COMBO", color = SoftGrey, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            Text("x${gameState.comboMultiplier}", color = ElectricCyan, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        }
+                        Text(
+                            gameState.gameMessage,
+                            color = IcyWhite,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.End,
+                            maxLines = 1,
+                            modifier = Modifier.weight(1f).padding(start = 12.dp)
+                        )
+                    }
                 }
             }
         }
@@ -247,8 +369,9 @@ fun WhackGameCanvas(
     modifier: Modifier = Modifier
 ) {
     // Cache family face bitmaps
-    val allBitmaps = remember(state.allProfiles) {
-        state.allProfiles.associate { profile ->
+    val allBitmaps = remember(state.teamAProfiles, state.teamBProfiles) {
+        val merged = state.teamAProfiles + state.teamBProfiles
+        merged.associate { profile ->
             profile.id to try { android.graphics.BitmapFactory.decodeFile(profile.imagePath) } catch (e: Exception) { null }
         }
     }
@@ -299,7 +422,7 @@ fun WhackGameCanvas(
                 )
 
                 // If portal has character, draw it popping out!
-                if (portal.type != PortalType.EMPTY) {
+                if (portal.type != PortalType.EMPTY && portal.familyProfile != null) {
                     val charCenterY = cY - radius * 0.1f // center it slightly above the hole
                     
                     drawContext.canvas.save()
@@ -309,90 +432,46 @@ fun WhackGameCanvas(
                         addRect(Rect(col * cellW, row * cellH, (col + 1) * cellW, cY + radius * 0.3f + 10f))
                     }
                     clipPath(clipRect) {
+                        val profile = portal.familyProfile!!
+                        val bitmap = allBitmaps[profile.id]
+                        val faceR = radius * 0.8f
                         
-                        if (portal.type == PortalType.MONSTER) {
-                            // Draw cute green neon alien vector
-                            drawCircle(
-                                color = Color(0xFF10B981), // emerald green
-                                radius = radius * 0.8f,
-                                center = Offset(cX, charCenterY)
-                            )
-                            // Alien Eyes
-                            val eyeR = radius * 0.15f
-                            drawCircle(
-                                color = Color.Yellow,
-                                radius = eyeR,
-                                center = Offset(cX - radius * 0.25f, charCenterY - radius * 0.15f)
-                            )
-                            drawCircle(
-                                color = Color.Yellow,
-                                radius = eyeR,
-                                center = Offset(cX + radius * 0.25f, charCenterY - radius * 0.15f)
-                            )
-                            // Pupils
-                            drawCircle(
-                                color = Color.Black,
-                                radius = eyeR * 0.5f,
-                                center = Offset(cX - radius * 0.25f, charCenterY - radius * 0.15f)
-                            )
-                            drawCircle(
-                                color = Color.Black,
-                                radius = eyeR * 0.5f,
-                                center = Offset(cX + radius * 0.25f, charCenterY - radius * 0.15f)
-                            )
-                            // Cute mouth
-                            drawArc(
-                                color = Color.Black,
-                                startAngle = 15f,
-                                sweepAngle = 150f,
-                                useCenter = false,
-                                topLeft = Offset(cX - radius * 0.25f, charCenterY - radius * 0.1f),
-                                size = Size(radius * 0.5f, radius * 0.35f),
-                                style = Stroke(width = 3f)
-                            )
-                            // Monster border
-                            drawCircle(
-                                color = ElectricCyan,
-                                radius = radius * 0.8f,
-                                center = Offset(cX, charCenterY),
-                                style = Stroke(width = 2.dp.toPx())
-                            )
-                            
-                        } else if (portal.type == PortalType.FAMILY && portal.familyProfile != null) {
-                            // Draw cropped family face
-                            val profile = portal.familyProfile!!
-                            val bitmap = allBitmaps[profile.id]
-                            val faceR = radius * 0.8f
-                            
-                            if (bitmap != null) {
-                                val image = bitmap.asImageBitmap()
-                                val facePath = Path().apply {
-                                    addOval(Rect(cX - faceR, charCenterY - faceR, cX + faceR, charCenterY + faceR))
-                                }
-                                clipPath(facePath) {
-                                    drawImage(
-                                        image = image,
-                                        dstOffset = IntOffset((cX - faceR).toInt(), (charCenterY - faceR).toInt()),
-                                        dstSize = IntSize((faceR * 2).toInt(), (faceR * 2).toInt())
-                                    )
-                                }
-                                
-                                // Neon Pink border for family member
-                                drawCircle(
-                                    color = NeonPink,
-                                    radius = faceR,
-                                    center = Offset(cX, charCenterY),
-                                    style = Stroke(width = 2.dp.toPx())
-                                )
-                            } else {
-                                // Fallback colored circle with initial letter
-                                drawCircle(
-                                    color = NeonPink,
-                                    radius = faceR,
-                                    center = Offset(cX, charCenterY)
+                        if (bitmap != null) {
+                            val image = bitmap.asImageBitmap()
+                            val facePath = Path().apply {
+                                addOval(Rect(cX - faceR, charCenterY - faceR, cX + faceR, charCenterY + faceR))
+                            }
+                            clipPath(facePath) {
+                                drawImage(
+                                    image = image,
+                                    dstOffset = IntOffset((cX - faceR).toInt(), (charCenterY - faceR).toInt()),
+                                    dstSize = IntSize((faceR * 2).toInt(), (faceR * 2).toInt())
                                 )
                             }
+                        } else {
+                            // Fallback colored circle with initial letter/label if bitmap null
+                            drawCircle(
+                                color = if (portal.type == PortalType.TEAM_B) NeonPink else ElectricCyan,
+                                radius = faceR,
+                                center = Offset(cX, charCenterY)
+                            )
                         }
+                        
+                        // Glow ring
+                        drawCircle(
+                            color = (if (portal.type == PortalType.TEAM_B) NeonPink else ElectricCyan).copy(alpha = 0.25f),
+                            radius = faceR + 5f,
+                            center = Offset(cX, charCenterY),
+                            style = Stroke(width = 1.5.dp.toPx())
+                        )
+                        
+                        // Border color: Neon Pink for opponent (Team B), Electric Cyan for teammate (Team A)
+                        drawCircle(
+                            color = if (portal.type == PortalType.TEAM_B) NeonPink else ElectricCyan,
+                            radius = faceR,
+                            center = Offset(cX, charCenterY),
+                            style = Stroke(width = 2.dp.toPx())
+                        )
                     }
                     drawContext.canvas.restore()
                 }

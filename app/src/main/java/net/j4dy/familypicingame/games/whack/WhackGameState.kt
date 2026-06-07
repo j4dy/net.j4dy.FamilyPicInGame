@@ -10,8 +10,8 @@ import kotlin.random.Random
 
 enum class PortalType {
     EMPTY,
-    MONSTER,
-    FAMILY
+    TEAM_A, // Teammate (avoid tapping)
+    TEAM_B  // Opponent (whack)
 }
 
 class PortalState(
@@ -31,7 +31,8 @@ class WhackSparkle(
 )
 
 class WhackGameState(
-    val allProfiles: List<FaceProfile>
+    val teamAProfiles: List<FaceProfile>,
+    val teamBProfiles: List<FaceProfile>
 ) {
     val portals = List(9) { PortalState(it) }
     val sparkles = mutableStateListOf<WhackSparkle>()
@@ -42,7 +43,7 @@ class WhackGameState(
     
     var isPlaying by mutableStateOf(false)
     var isGameOver by mutableStateOf(false)
-    var gameMessage by mutableStateOf("TAP START TO WHACK")
+    var gameMessage by mutableStateOf("TAP START TO PLAY")
     
     private val defaultRoundTime = 45
     private var framesSinceLastSpawn = 0
@@ -79,7 +80,7 @@ class WhackGameState(
             it.familyProfile = null
             it.showTimeLeft = 0
         }
-        gameMessage = "Round Started! Go!"
+        gameMessage = "Go Team! Whack opponents!"
     }
 
     fun resetGame() {
@@ -94,7 +95,7 @@ class WhackGameState(
             it.familyProfile = null
             it.showTimeLeft = 0
         }
-        gameMessage = "TAP START TO WHACK"
+        gameMessage = "TAP START TO PLAY"
     }
 
     fun tickSecond() {
@@ -113,7 +114,6 @@ class WhackGameState(
             if (portal.type != PortalType.EMPTY) {
                 portal.showTimeLeft--
                 if (portal.showTimeLeft <= 0) {
-                    // Reset to empty when time expires
                     portal.type = PortalType.EMPTY
                     portal.familyProfile = null
                 }
@@ -144,19 +144,23 @@ class WhackGameState(
         // Select a random empty portal
         val portal = emptyPortals[Random.nextInt(emptyPortals.size)]
         
-        // 70% chance of Monster, 30% chance of Family member
-        val isFamily = Random.nextFloat() < 0.30f && allProfiles.isNotEmpty()
+        // 50% chance of Team A, 50% chance of Team B
+        val isTeamA = Random.nextFloat() < 0.50f
         
-        if (isFamily) {
-            portal.type = PortalType.FAMILY
-            // Pick a random family member
-            portal.familyProfile = allProfiles[Random.nextInt(allProfiles.size)]
+        if (isTeamA && teamAProfiles.isNotEmpty()) {
+            portal.type = PortalType.TEAM_A
+            portal.familyProfile = teamAProfiles[Random.nextInt(teamAProfiles.size)]
+        } else if (teamBProfiles.isNotEmpty()) {
+            portal.type = PortalType.TEAM_B
+            portal.familyProfile = teamBProfiles[Random.nextInt(teamBProfiles.size)]
         } else {
-            portal.type = PortalType.MONSTER
+            portal.type = PortalType.EMPTY
             portal.familyProfile = null
         }
         
-        portal.showTimeLeft = getPortalDuration()
+        if (portal.type != PortalType.EMPTY) {
+            portal.showTimeLeft = getPortalDuration()
+        }
     }
 
     fun whackCell(index: Int) {
@@ -164,12 +168,12 @@ class WhackGameState(
         
         val portal = portals[index]
         when (portal.type) {
-            PortalType.MONSTER -> {
+            PortalType.TEAM_B -> { // Opponent (Score points)
                 val points = 100 * comboMultiplier
                 score += points
                 comboMultiplier++
                 
-                // Add positive feedback sparkle
+                val name = portal.familyProfile?.name ?: "Opponent"
                 sparkles.add(
                     WhackSparkle(
                         index = index,
@@ -179,33 +183,30 @@ class WhackGameState(
                     )
                 )
                 
-                gameMessage = "HIT! Combo x$comboMultiplier"
+                gameMessage = "WHACKED $name! Combo x$comboMultiplier"
                 portal.type = PortalType.EMPTY
                 portal.familyProfile = null
             }
-            PortalType.FAMILY -> {
-                // Tapping family member is a penalty
+            PortalType.TEAM_A -> { // Teammate (Penalty)
                 val penalty = 200
                 score = (score - penalty).coerceAtLeast(0)
                 comboMultiplier = 1
                 
-                val familyName = portal.familyProfile?.name ?: "Family"
-                // Add penalty feedback sparkle
+                val name = portal.familyProfile?.name ?: "Teammate"
                 sparkles.add(
                     WhackSparkle(
                         index = index,
                         offset = Offset(Random.nextFloat() * 40 - 20, -50f),
-                        text = "Don't tap $familyName! -$penalty",
+                        text = "Don't tap teammate $name! -$penalty",
                         isPenalty = true
                     )
                 )
                 
-                gameMessage = "OW! That's $familyName!"
+                gameMessage = "OW! That's teammate $name!"
                 portal.type = PortalType.EMPTY
                 portal.familyProfile = null
             }
             PortalType.EMPTY -> {
-                // Optional minor miss penalty
                 comboMultiplier = 1
                 gameMessage = "MISS!"
             }
