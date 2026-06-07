@@ -323,59 +323,60 @@ fun SnakeGameCanvas(
             }
         }
 
-        // 1.5 Draw diagonal boundary lines and soft arrow chevrons for tap zone guides
-        val dashEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f), 0f)
+        // 1.5 Draw diagonal boundary lines and soft arrow chevrons for tap zone guides (high visibility)
+        val dashEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 20f), 0f)
         drawLine(
-            color = CyberPurple.copy(alpha = 0.15f),
+            color = CyberPurple.copy(alpha = 0.45f),
             start = Offset(0f, 0f),
             end = Offset(w, h),
-            strokeWidth = 1.dp.toPx(),
+            strokeWidth = 2.dp.toPx(),
             pathEffect = dashEffect
         )
         drawLine(
-            color = CyberPurple.copy(alpha = 0.15f),
+            color = CyberPurple.copy(alpha = 0.45f),
             start = Offset(w, 0f),
             end = Offset(0f, h),
-            strokeWidth = 1.dp.toPx(),
+            strokeWidth = 2.dp.toPx(),
             pathEffect = dashEffect
         )
         
-        // Soft directional guides (triangles)
-        val arrowSize = 24f
-        val guideColor = ElectricCyan.copy(alpha = 0.12f)
+        // Soft directional guides (triangles scaled dynamically in Dp)
+        val arrowSize = 16.dp.toPx()
+        val margin = 24.dp.toPx()
+        val guideColor = ElectricCyan.copy(alpha = 0.35f)
         
         // UP
         val upPath = Path().apply {
-            moveTo(w / 2f, 30f)
-            lineTo(w / 2f - arrowSize, 30f + arrowSize)
-            lineTo(w / 2f + arrowSize, 30f + arrowSize)
+            moveTo(w / 2f, margin)
+            lineTo(w / 2f - arrowSize, margin + arrowSize)
+            lineTo(w / 2f + arrowSize, margin + arrowSize)
             close()
         }
         drawPath(upPath, color = guideColor)
         
         // DOWN
         val downPath = Path().apply {
-            moveTo(w / 2f, h - 30f)
-            lineTo(w / 2f - arrowSize, h - 30f - arrowSize)
-            lineTo(w / 2f + arrowSize, h - 30f - arrowSize)
+            moveTo(w / 2f, h - margin)
+            lineTo(w / 2f - arrowSize, h - margin - arrowSize)
+            lineTo(w / 2f + arrowSize, h - margin - arrowSize)
             close()
         }
         drawPath(downPath, color = guideColor)
         
         // LEFT
         val leftPath = Path().apply {
-            moveTo(30f, h / 2f)
-            lineTo(30f + arrowSize, h / 2f - arrowSize)
-            lineTo(30f + arrowSize, h / 2f + arrowSize)
+            moveTo(margin, h / 2f)
+            lineTo(margin + arrowSize, h / 2f - arrowSize)
+            lineTo(margin + arrowSize, h / 2f + arrowSize)
             close()
         }
         drawPath(leftPath, color = guideColor)
         
         // RIGHT
         val rightPath = Path().apply {
-            moveTo(w - 30f, h / 2f)
-            lineTo(w - 30f - arrowSize, h / 2f - arrowSize)
-            lineTo(w - 30f - arrowSize, h / 2f + arrowSize)
+            moveTo(w - margin, h / 2f)
+            lineTo(w - margin - arrowSize, h / 2f - arrowSize)
+            lineTo(w - margin - arrowSize, h / 2f + arrowSize)
             close()
         }
         drawPath(rightPath, color = guideColor)
