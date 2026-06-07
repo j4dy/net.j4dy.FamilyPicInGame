@@ -30,6 +30,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -321,6 +322,63 @@ fun SnakeGameCanvas(
                 )
             }
         }
+
+        // 1.5 Draw diagonal boundary lines and soft arrow chevrons for tap zone guides
+        val dashEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f), 0f)
+        drawLine(
+            color = CyberPurple.copy(alpha = 0.15f),
+            start = Offset(0f, 0f),
+            end = Offset(w, h),
+            strokeWidth = 1.dp.toPx(),
+            pathEffect = dashEffect
+        )
+        drawLine(
+            color = CyberPurple.copy(alpha = 0.15f),
+            start = Offset(w, 0f),
+            end = Offset(0f, h),
+            strokeWidth = 1.dp.toPx(),
+            pathEffect = dashEffect
+        )
+        
+        // Soft directional guides (triangles)
+        val arrowSize = 24f
+        val guideColor = ElectricCyan.copy(alpha = 0.12f)
+        
+        // UP
+        val upPath = Path().apply {
+            moveTo(w / 2f, 30f)
+            lineTo(w / 2f - arrowSize, 30f + arrowSize)
+            lineTo(w / 2f + arrowSize, 30f + arrowSize)
+            close()
+        }
+        drawPath(upPath, color = guideColor)
+        
+        // DOWN
+        val downPath = Path().apply {
+            moveTo(w / 2f, h - 30f)
+            lineTo(w / 2f - arrowSize, h - 30f - arrowSize)
+            lineTo(w / 2f + arrowSize, h - 30f - arrowSize)
+            close()
+        }
+        drawPath(downPath, color = guideColor)
+        
+        // LEFT
+        val leftPath = Path().apply {
+            moveTo(30f, h / 2f)
+            lineTo(30f + arrowSize, h / 2f - arrowSize)
+            lineTo(30f + arrowSize, h / 2f + arrowSize)
+            close()
+        }
+        drawPath(leftPath, color = guideColor)
+        
+        // RIGHT
+        val rightPath = Path().apply {
+            moveTo(w - 30f, h / 2f)
+            lineTo(w - 30f - arrowSize, h / 2f - arrowSize)
+            lineTo(w - 30f - arrowSize, h / 2f + arrowSize)
+            close()
+        }
+        drawPath(rightPath, color = guideColor)
 
         // 2. Draw Food target (circular face)
         val foodX = state.foodPos.x * cellW + cellW/2
