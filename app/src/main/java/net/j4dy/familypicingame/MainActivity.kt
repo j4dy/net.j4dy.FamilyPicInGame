@@ -16,8 +16,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.j4dy.familypicingame.games.GameDescriptor
+import net.j4dy.familypicingame.games.flappy.FlappyGameScreen
 import net.j4dy.familypicingame.games.slingshot.SlingshotGameScreen
 import net.j4dy.familypicingame.games.snake.SnakeGameScreen
+import net.j4dy.familypicingame.games.whack.WhackGameScreen
 import net.j4dy.familypicingame.ui.screens.FaceCropScreen
 import net.j4dy.familypicingame.ui.screens.FaceManagerScreen
 import net.j4dy.familypicingame.ui.screens.HomeScreen
@@ -50,6 +52,18 @@ class MainActivity : ComponentActivity() {
                                 title = "Family Nibbles",
                                 description = "Collect food and watch your family members join the chasing snake body!",
                                 route = "game_snake"
+                            ),
+                            GameDescriptor(
+                                id = "flappy",
+                                title = "Family Flappy Flight",
+                                description = "Steer your family astronaut between neon pillars in space!",
+                                route = "game_flappy"
+                            ),
+                            GameDescriptor(
+                                id = "whack",
+                                title = "Whack-a-Monster",
+                                description = "Tap pop-up alien monsters but avoid tapping your family members!",
+                                route = "game_whack"
                             )
                         )
                     }
@@ -116,6 +130,24 @@ class MainActivity : ComponentActivity() {
                         // Snake/Nibbles Game Screen
                         composable("game_snake") {
                             SnakeGameScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        // Flappy Flight Game Screen
+                        composable("game_flappy") {
+                            FlappyGameScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        // Whack-a-Monster Game Screen
+                        composable("game_whack") {
+                            WhackGameScreen(
                                 onBackClick = {
                                     navController.popBackStack()
                                 }
