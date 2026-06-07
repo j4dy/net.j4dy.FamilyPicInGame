@@ -299,16 +299,34 @@ class SlingshotGameState(
         
         var tempPos = birdPos
         val dragOffset = slingAnchor - birdPos
-        var tempVel = dragOffset * 0.16f
+        var tempVel = dragOffset * 0.85f // Match the release launch multiplier exactly
         
-        // Project 30 ticks forward
-        for (i in 0 until 30) {
-            tempVel += gravity
-            tempPos += tempVel
-            points.add(Offset(tempPos.x, tempPos.y))
+        // Project forward
+        for (i in 0 until 120) {
+            tempVel = tempVel + gravity
+            tempPos = tempPos + tempVel
             
-            // Ground intersection stops projection
-            if (tempPos.y > 560f) break
+            // Ceiling boundary check
+            if (tempPos.y - birdRadius < 0f) {
+                tempPos = Vector2D(tempPos.x, birdRadius)
+                tempVel = Vector2D(tempVel.x, -tempVel.y * bounceFactor)
+            }
+            
+            // Ground boundary check
+            val groundY = 560f
+            if (tempPos.y + birdRadius > groundY) {
+                tempPos = Vector2D(tempPos.x, groundY - birdRadius)
+                points.add(Offset(tempPos.x, tempPos.y))
+                break // Stop projection when it hits the ground
+            }
+            
+            // Left/Right boundaries check
+            if (tempPos.x + birdRadius > 1280f || tempPos.x - birdRadius < 0f) {
+                points.add(Offset(tempPos.x, tempPos.y))
+                break
+            }
+            
+            points.add(Offset(tempPos.x, tempPos.y))
         }
         return points
     }
