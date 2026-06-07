@@ -22,15 +22,15 @@ class FaceStorage(private val context: Context) {
 
     init {
         // Initialize default characters if none exist
-        if (getProfiles().isEmpty()) {
+        if (getRawProfiles().isEmpty()) {
             createDefaultProfiles()
         }
     }
 
     /**
-     * Retrieves all saved face profiles.
+     * Retrieves all saved face profiles in raw storage order (chronological).
      */
-    fun getProfiles(): List<FaceProfile> {
+    private fun getRawProfiles(): List<FaceProfile> {
         val jsonStr = sharedPrefs.getString("profiles", "[]") ?: "[]"
         val list = mutableListOf<FaceProfile>()
         try {
@@ -50,6 +50,16 @@ class FaceStorage(private val context: Context) {
             e.printStackTrace()
         }
         return list
+    }
+
+    /**
+     * Retrieves all saved face profiles, placing custom photos (newest first) before default characters.
+     */
+    fun getProfiles(): List<FaceProfile> {
+        val rawList = getRawProfiles()
+        val custom = rawList.filter { !it.isDefault }
+        val defaults = rawList.filter { it.isDefault }
+        return custom.reversed() + defaults
     }
 
     /**
@@ -94,7 +104,7 @@ class FaceStorage(private val context: Context) {
             isDefault = false
         )
 
-        val updatedList = getProfiles().toMutableList().apply { add(newProfile) }
+        val updatedList = getRawProfiles().toMutableList().apply { add(newProfile) }
         saveProfiles(updatedList)
         return newProfile
     }
@@ -103,7 +113,7 @@ class FaceStorage(private val context: Context) {
      * Deletes a profile.
      */
     fun deleteProfile(id: String) {
-        val currentProfiles = getProfiles()
+        val currentProfiles = getRawProfiles()
         val target = currentProfiles.find { it.id == id }
         if (target != null) {
             // Delete actual image file if not a default profile (defaults are handled in assets/files)
