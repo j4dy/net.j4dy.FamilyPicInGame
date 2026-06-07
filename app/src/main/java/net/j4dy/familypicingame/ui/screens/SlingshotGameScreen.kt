@@ -181,101 +181,172 @@ fun SlingshotGameScreen(
             }
         }
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Family Slingshot", fontWeight = FontWeight.Bold) },
-                    navigationIcon = {
-                        IconButton(onClick = { gameStarted = false }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = IcyWhite)
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { gameState.resetLevel() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Reset Level", tint = ElectricCyan)
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepDarkBlue)
-                )
-            }
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .background(DeepDarkBlue)
-            ) {
-                // Game Canvas
-                SlingshotGameCanvas(
-                    state = gameState,
-                    modifier = Modifier.fillMaxSize()
-                )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DeepDarkBlue)
+        ) {
+            // Full Screen Game Canvas
+            SlingshotGameCanvas(
+                state = gameState,
+                modifier = Modifier.fillMaxSize()
+            )
 
-                // Bottom Dashboard HUD (score, message, lives)
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            // 1. Floating Back Button (top-left)
+            IconButton(
+                onClick = { gameStarted = false },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopStart)
+                    .size(44.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    .border(1.dp, ElectricCyan.copy(alpha = 0.5f), CircleShape)
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = IcyWhite)
+            }
+
+            // 2. Floating Reset Button (top-right)
+            IconButton(
+                onClick = { gameState.resetLevel() },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopEnd)
+                    .size(44.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    .border(1.dp, ElectricCyan.copy(alpha = 0.5f), CircleShape)
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = "Reset Level", tint = ElectricCyan)
+            }
+
+            // 3. Floating HUD Badge (top-center glassmorphic bar)
+            Card(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .align(Alignment.TopCenter)
+                    .border(1.dp, CyberPurple.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
+                colors = CardDefaults.cardColors(containerColor = CardSlate.copy(alpha = 0.75f)),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Text("Score: ${gameState.score}", color = ElectricCyan, fontWeight = FontWeight.Black, fontSize = 14.sp)
+                    
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(16.dp)
+                            .background(SoftGrey.copy(alpha = 0.4f))
+                    )
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Shots: ", color = IcyWhite, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        for (i in 0 until 3) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .padding(horizontal = 1.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (i < gameState.shotsLeft) NeonPink else Color.DarkGray
+                                    )
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 4. Temporary Floating Game Message Banner (bottom-center)
+            Text(
+                text = gameState.gameStateMessage,
+                color = IcyWhite.copy(alpha = 0.8f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 8.dp)
+                    .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            )
+
+            // 5. Centered Victory / Game Over Overlay Modal
+            val isGameOver = gameState.shotsLeft <= 0 || gameState.targets.all { it.isDestroyed }
+            if (isGameOver) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.6f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val isVictory = gameState.targets.all { it.isDestroyed }
                     Card(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, CyberPurple.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
-                        colors = CardDefaults.cardColors(containerColor = CardSlate.copy(alpha = 0.85f)),
-                        shape = RoundedCornerShape(16.dp)
+                            .width(320.dp)
+                            .border(1.dp, if (isVictory) ElectricCyan else NeonPink, RoundedCornerShape(20.dp)),
+                        colors = CardDefaults.cardColors(containerColor = CardSlate.copy(alpha = 0.95f)),
+                        shape = RoundedCornerShape(20.dp)
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Score: ${gameState.score}", color = ElectricCyan, fontWeight = FontWeight.Black, fontSize = 20.sp)
-                                Row {
-                                    for (i in 0 until 3) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(16.dp)
-                                                .padding(horizontal = 2.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    if (i < gameState.shotsLeft) NeonPink else Color.DarkGray
-                                                )
-                                        )
-                                    }
-                                }
-                            }
+                            Text(
+                                text = if (isVictory) "VICTORY!" else "GAME OVER",
+                                color = if (isVictory) ElectricCyan else NeonPink,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                text = gameState.gameStateMessage,
+                                text = if (isVictory) "You demolished the targets!" else "You ran out of slingshot shots.",
                                 color = IcyWhite,
                                 fontSize = 14.sp,
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.SemiBold
+                                textAlign = TextAlign.Center
                             )
-                        }
-                    }
-
-                    // Reset button overlay if out of shots or victory
-                    val isGameOver = gameState.shotsLeft <= 0 || gameState.targets.all { it.isDestroyed }
-                    AnimatedVisibility(visible = isGameOver) {
-                        Button(
-                            onClick = { gameState.resetLevel() },
-                            modifier = Modifier
-                                .padding(top = 16.dp)
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("PLAY AGAIN", color = DeepDarkBlue, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Text(
+                                text = "Final Score: ${gameState.score}",
+                                color = ElectricCyan,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            Spacer(modifier = Modifier.height(24.dp))
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Button(
+                                    onClick = { gameStarted = false },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = CardSlate.copy(alpha = 0.5f)),
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, SoftGrey)
+                                ) {
+                                    Text("ROLES", color = IcyWhite, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                                
+                                Button(
+                                    onClick = { gameState.resetLevel() },
+                                    modifier = Modifier.weight(1.5f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("PLAY AGAIN", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                }
+                            }
                         }
                     }
                 }
