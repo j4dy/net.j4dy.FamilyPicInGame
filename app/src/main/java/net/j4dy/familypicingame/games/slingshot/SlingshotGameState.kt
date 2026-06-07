@@ -40,7 +40,11 @@ data class BlockObstacle(
     val color: Color,
     var isDestroyed: Boolean = false,
     val isGlass: Boolean = false,
-    var velY: Float = 0f // vertical velocity for falling physics
+    var velY: Float = 0f,     // vertical velocity for falling physics
+    var velX: Float = 0f,     // horizontal velocity for sliding/toppling
+    var rotation: Float = 0f, // rotation angle in degrees
+    var velRot: Float = 0f,   // rotational velocity in degrees/frame
+    var xOffset: Float = 0f   // horizontal displacement offset
 )
 
 class SlingshotGameState(
@@ -219,45 +223,115 @@ class SlingshotGameState(
             }
         }
 
-        // 2. Update block gravity physics (blocks falling down when unsupported)
+        // 2. Update block gravity & toppling slide-rotation physics
         val groundY = 560f
         for (b in blocks) {
             if (b.isDestroyed) continue
             
-            var supported = false
-            if (b.top + b.height >= groundY - 2f) {
-                b.top = groundY - b.height
-                b.velY = 0f
-                supported = true
+            // Check supports underneath block
+            val supports = mutableListOf<Pair<Float, Float>>()
+            var restingOnGround = false
+            
+            if (b.top + b.height >= groundY - 4f) {
+                restingOnGround = true
             } else {
-                // Check if resting on top of another active block
                 for (other in blocks) {
                     if (other === b || other.isDestroyed) continue
-                    val hOverlap = b.left < other.left + other.width && b.left + b.width > other.left
+                    
+                    val bLeft = b.left + b.xOffset
+                    val otherLeft = other.left + other.xOffset
+                    val hOverlap = bLeft < otherLeft + other.width && bLeft + b.width > otherLeft
+                    
                     if (hOverlap) {
-                        // resting distance threshold check
-                        if (Math.abs((b.top + b.height) - other.top) < 4f && b.velY >= 0f) {
-                            b.top = other.top - b.height
-                            b.velY = 0f
-                            supported = true
-                            break
+                        val verticalDist = other.top - (b.top + b.height)
+                        if (verticalDist in -5f..6f && b.velY >= 0f) {
+                            val contactMin = Math.max(bLeft, otherLeft)
+                            val contactMax = Math.min(bLeft + b.width, otherLeft + other.width)
+                            supports.add(Pair(contactMin, contactMax))
                         }
                     }
                 }
             }
             
-            if (!supported) {
-                b.velY += 0.45f // apply gravity acceleration
+            if (restingOnGround) {
+                b.top = groundY - b.height
+                b.velY = 0f
+                b.velX = 0f
+                b.velRot = 0f
+                b.rotation = 0f
+            } else if (supports.isEmpty()) {
+                // Free fall
+                b.velY += 0.45f
                 b.top += b.velY
+                
+                b.rotation += b.velRot
+                b.xOffset += b.velX
+            } else {
+                // Supported - solve balanced pivot / toppling torque
+                b.velY = 0f
+                val center = (b.left + b.xOffset) + b.width / 2f
+                
+                if (supports.size == 1) {
+                    val contact = supports[0]
+                    if (center < contact.first) {
+                        // Unstable - topple to the left
+                        b.velRot -= 0.6f
+                        b.velX -= 0.3f
+                        b.rotation += b.velRot
+                        b.xOffset += b.velX
+                        b.top += 0.8f // tilt downwards dip
+                    } else if (center > contact.second) {
+                        // Unstable - topple to the right
+                        b.velRot += 0.6f
+                        b.velX += 0.3f
+                        b.rotation += b.velRot
+                        b.xOffset += b.velX
+                        b.top += 0.8f
+                    } else {
+                        // Stable balanced
+                        b.velX = 0f
+                        b.velRot = 0f
+                        b.rotation = 0f
+                    }
+                } else {
+                    // Multiple supports
+                    val leftmost = supports.map { it.first }.minOrNull() ?: (b.left + b.xOffset)
+                    val rightmost = supports.map { it.second }.maxOrNull() ?: (b.left + b.xOffset + b.width)
+                    
+                    if (center < leftmost) {
+                        b.velRot -= 0.6f
+                        b.velX -= 0.3f
+                        b.rotation += b.velRot
+                        b.xOffset += b.velX
+                        b.top += 0.8f
+                    } else if (center > rightmost) {
+                        b.velRot += 0.6f
+                        b.velX += 0.3f
+                        b.rotation += b.velRot
+                        b.xOffset += b.velX
+                        b.top += 0.8f
+                    } else {
+                        // Stable spanning supports
+                        b.velX = 0f
+                        b.velRot = 0f
+                        b.rotation = 0f
+                    }
+                }
             }
         }
 
-        // 3. Falling blocks squashing targets underneath them
+        // 3. Falling/Toppling blocks squashing targets underneath them
         for (block in blocks) {
-            if (block.isDestroyed || Math.abs(block.velY) < 1.5f) continue
+            if (block.isDestroyed || (Math.abs(block.velY) < 1.0f && Math.abs(block.velX) < 1.0f && Math.abs(block.velRot) < 1.0f)) continue
             for (target in targets) {
                 if (target.isDestroyed) continue
-                if (circleCollidesWithRect(target.pos, target.radius, block)) {
+                
+                val blockLeft = block.left + block.xOffset
+                val closestX = Math.max(blockLeft, Math.min(target.pos.x, blockLeft + block.width))
+                val closestY = Math.max(block.top, Math.min(target.pos.y, block.top + block.height))
+                val distanceSquared = (target.pos.x - closestX) * (target.pos.x - closestX) + (target.pos.y - closestY) * (target.pos.y - closestY)
+                
+                if (distanceSquared < target.radius * target.radius) {
                     target.isDestroyed = true
                     score += 200
                     screenShake += 10f
@@ -271,7 +345,7 @@ class SlingshotGameState(
             birdVel = birdVel + gravity
             birdPos = birdPos + birdVel
             
-            // Wall collisions (bounce/destroy boundaries)
+            // Wall collisions
             if (birdPos.y - birdRadius < 0) {
                 birdPos = Vector2D(birdPos.x, birdRadius)
                 birdVel = Vector2D(birdVel.x, -birdVel.y * bounceFactor)
@@ -282,7 +356,6 @@ class SlingshotGameState(
                 birdPos = Vector2D(birdPos.x, groundY - birdRadius)
                 birdVel = Vector2D(birdVel.x * 0.8f, -birdVel.y * bounceFactor)
                 
-                // If velocity drops, end the flight
                 if (Math.abs(birdVel.y) < 0.6f && Math.abs(birdVel.x) < 0.6f) {
                     endFlight()
                 }
@@ -297,13 +370,18 @@ class SlingshotGameState(
             for (block in blocks) {
                 if (block.isDestroyed) continue
                 
-                if (circleCollidesWithRect(birdPos, birdRadius, block)) {
+                val blockLeft = block.left + block.xOffset
+                val closestX = Math.max(blockLeft, Math.min(birdPos.x, blockLeft + block.width))
+                val closestY = Math.max(block.top, Math.min(birdPos.y, block.top + block.height))
+                val distanceSquared = (birdPos.x - closestX) * (birdPos.x - closestX) + (birdPos.y - closestY) * (birdPos.y - closestY)
+                
+                if (distanceSquared < birdRadius * birdRadius) {
                     block.isDestroyed = true
                     score += if (block.isGlass) 50 else 100
                     screenShake += 8f
                     
                     spawnExplosion(
-                        center = Vector2D(block.left + block.width/2, block.top + block.height/2),
+                        center = Vector2D(blockLeft + block.width/2, block.top + block.height/2),
                         color = if (block.isGlass) Color(0xCC00F5FF) else Color(0xFFC68B59),
                         count = 12
                     )
@@ -358,7 +436,8 @@ class SlingshotGameState(
     }
 
     private fun circleCollidesWithRect(circle: Vector2D, radius: Float, rect: BlockObstacle): Boolean {
-        val closestX = Math.max(rect.left, Math.min(circle.x, rect.left + rect.width))
+        val blockLeft = rect.left + rect.xOffset
+        val closestX = Math.max(blockLeft, Math.min(circle.x, blockLeft + rect.width))
         val closestY = Math.max(rect.top, Math.min(circle.y, rect.top + rect.height))
         
         val distanceX = circle.x - closestX

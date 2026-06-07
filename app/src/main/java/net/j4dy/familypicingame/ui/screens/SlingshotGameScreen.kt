@@ -641,13 +641,22 @@ fun SlingshotGameCanvas(
             }
 
             // 8. Draw structural Block obstacles
+            // 8. Draw structural Block obstacles (with toppling rotation and slide offsets)
             for (block in state.blocks) {
                 if (block.isDestroyed) continue
+                
+                drawContext.canvas.save()
+                val blockCenterX = block.left + block.xOffset + block.width / 2
+                val blockCenterY = block.top + block.height / 2
+                
+                drawContext.canvas.translate(blockCenterX, blockCenterY)
+                drawContext.canvas.rotate(block.rotation)
+                drawContext.canvas.translate(-blockCenterX, -blockCenterY)
                 
                 // Wooden / Glass blocks
                 drawRoundRect(
                     color = block.color,
-                    topLeft = Offset(block.left, block.top),
+                    topLeft = Offset(block.left + block.xOffset, block.top),
                     size = Size(block.width, block.height),
                     cornerRadius = CornerRadius(8f, 8f),
                     style = if (block.isGlass) Stroke(width = 2.dp.toPx()) else androidx.compose.ui.graphics.drawscope.Fill
@@ -657,10 +666,12 @@ fun SlingshotGameCanvas(
                 if (block.isGlass) {
                     drawRect(
                         color = ElectricCyan.copy(alpha = 0.2f),
-                        topLeft = Offset(block.left, block.top),
+                        topLeft = Offset(block.left + block.xOffset, block.top),
                         size = Size(block.width, block.height)
                     )
                 }
+                
+                drawContext.canvas.restore()
             }
 
             // 9. Draw Targets (Enemies with circular face)
