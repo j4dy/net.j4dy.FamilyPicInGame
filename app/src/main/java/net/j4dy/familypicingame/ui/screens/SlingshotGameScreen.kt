@@ -432,16 +432,24 @@ fun SlingshotGameCanvas(
                     onDragStart = { offset ->
                         val scaleX = size.width.toFloat() / 1280f
                         val scaleY = size.height.toFloat() / 720f
-                        val touchVec = Vector2D(offset.x / scaleX, offset.y / scaleY)
+                        val scale = minOf(scaleX, scaleY)
+                        val offsetX = (size.width.toFloat() - 1280f * scale) / 2f
+                        val offsetY = (size.height.toFloat() - 720f * scale) / 2f
+                        val touchVec = Vector2D((offset.x - offsetX) / scale, (offset.y - offsetY) / scale)
                         if (state.birdPos.distance(touchVec) < state.birdRadius * 2.2f) {
-                            state.onDrag(Offset(offset.x / scaleX, offset.y / scaleY))
+                            state.onDrag(Offset(touchVec.x, touchVec.y))
                         }
                     },
                     onDrag = { change, _ ->
                         if (state.isDragging) {
                             val scaleX = size.width.toFloat() / 1280f
                             val scaleY = size.height.toFloat() / 720f
-                            state.onDrag(Offset(change.position.x / scaleX, change.position.y / scaleY))
+                            val scale = minOf(scaleX, scaleY)
+                            val offsetX = (size.width.toFloat() - 1280f * scale) / 2f
+                            val offsetY = (size.height.toFloat() - 720f * scale) / 2f
+                            val logicalX = (change.position.x - offsetX) / scale
+                            val logicalY = (change.position.y - offsetY) / scale
+                            state.onDrag(Offset(logicalX, logicalY))
                         }
                     },
                     onDragEnd = {
@@ -458,6 +466,9 @@ fun SlingshotGameCanvas(
             
             val scaleX = physicalW / 1280f
             val scaleY = physicalH / 720f
+            val scale = minOf(scaleX, scaleY)
+            val offsetX = (physicalW - 1280f * scale) / 2f
+            val offsetY = (physicalH - 720f * scale) / 2f
             
             val w = 1280f
             val h = 720f
@@ -467,19 +478,15 @@ fun SlingshotGameCanvas(
             val shakeX = if (state.screenShake > 0) (Math.random().toFloat() * 2 - 1) * state.screenShake else 0f
             val shakeY = if (state.screenShake > 0) (Math.random().toFloat() * 2 - 1) * state.screenShake else 0f
             
-            drawContext.canvas.save()
-            // Scale to standard landscape grid first, then apply translate shake
-            drawContext.canvas.scale(scaleX, scaleY)
-            drawContext.canvas.translate(shakeX, shakeY)
-
-            // 1. Draw beautiful hills in the background (parallax)
+            // 1. Draw beautiful hills in the background (parallax) - extended to screen edges
+            val physicalGroundY = groundY * scale + offsetY
             drawPath(
                 path = Path().apply {
-                    moveTo(0f, groundY)
-                    quadraticBezierTo(w * 0.25f, groundY - 140f, w * 0.5f, groundY)
-                    quadraticBezierTo(w * 0.75f, groundY - 80f, w, groundY)
-                    lineTo(w, h)
-                    lineTo(0f, h)
+                    moveTo(0f, physicalGroundY)
+                    quadraticBezierTo(physicalW * 0.25f, physicalGroundY - 140f * scale, physicalW * 0.5f, physicalGroundY)
+                    quadraticBezierTo(physicalW * 0.75f, physicalGroundY - 80f * scale, physicalW, physicalGroundY)
+                    lineTo(physicalW, physicalH)
+                    lineTo(0f, physicalH)
                     close()
                 },
                 brush = Brush.verticalGradient(
@@ -487,21 +494,27 @@ fun SlingshotGameCanvas(
                 )
             )
 
-            // 2. Draw ground level
+            // 2. Draw ground level - extended to screen edges
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(Color(0xFF22C55E), Color(0xFF15803D)) // Green ground
                 ),
-                topLeft = Offset(0f, groundY),
-                size = Size(w, h - groundY)
+                topLeft = Offset(0f, physicalGroundY),
+                size = Size(physicalW, physicalH - physicalGroundY)
             )
             // Ground top neon thin border line
             drawLine(
                 color = ElectricCyan,
-                start = Offset(0f, groundY),
-                end = Offset(w, groundY),
+                start = Offset(0f, physicalGroundY),
+                end = Offset(physicalW, physicalGroundY),
                 strokeWidth = 2.dp.toPx()
             )
+            
+            drawContext.canvas.save()
+            // Center the 1280x720 layout and scale uniformly
+            drawContext.canvas.translate(offsetX, offsetY)
+            drawContext.canvas.scale(scale, scale)
+            drawContext.canvas.translate(shakeX, shakeY)
 
             // 3. Draw slingshot poles (rustic neon brown sticks)
             val anchorX = state.slingAnchor.x
