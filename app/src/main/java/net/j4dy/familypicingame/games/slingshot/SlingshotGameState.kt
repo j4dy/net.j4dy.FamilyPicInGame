@@ -34,19 +34,20 @@ data class TargetObstacle(
 data class BlockObstacle(
     val id: String,
     val left: Float,
-    val top: Float,
+    var top: Float, // var so they can fall!
     val width: Float,
     val height: Float,
     val color: Color,
     var isDestroyed: Boolean = false,
-    val isGlass: Boolean = false
+    val isGlass: Boolean = false,
+    var velY: Float = 0f // vertical velocity for falling physics
 )
 
 class SlingshotGameState(
     val heroProfile: FaceProfile,
     val targetProfile: FaceProfile
 ) {
-    // Slingshot anchor (moved further from left edge to allow more pulling room)
+    // Slingshot anchor
     val slingAnchor = Vector2D(280f, 460f)
     val maxDragDist = 120f
     
@@ -63,6 +64,10 @@ class SlingshotGameState(
     var gameStateMessage by mutableStateOf("Pull back to launch!")
     var screenShake by mutableStateOf(0f)
 
+    // Level progression
+    var currentLevel by mutableStateOf(1)
+    val maxLevels = 3
+
     // Lists of objects
     var targets = mutableListOf<TargetObstacle>()
     var blocks = mutableListOf<BlockObstacle>()
@@ -78,6 +83,13 @@ class SlingshotGameState(
         resetLevel()
     }
 
+    fun nextLevel() {
+        if (currentLevel < maxLevels) {
+            currentLevel++
+            resetLevel()
+        }
+    }
+
     fun resetLevel() {
         birdPos = slingAnchor
         birdVel = Vector2D(0f, 0f)
@@ -85,30 +97,77 @@ class SlingshotGameState(
         isFlying = false
         shotsLeft = 3
         score = 0
-        gameStateMessage = "Pull back the slingshot!"
+        gameStateMessage = "Level $currentLevel: Aim carefully!"
         screenShake = 0f
-        
-        // Spawn 3 targets at landscape-spaced positions on the right
-        targets = mutableListOf(
-            TargetObstacle("t1", Vector2D(920f, 500f), profile = targetProfile),
-            TargetObstacle("t2", Vector2D(1080f, 500f), profile = targetProfile),
-            TargetObstacle("t3", Vector2D(1000f, 320f), profile = targetProfile)
-        )
-
-        // Wooden/glass defensive structures (AABB blocks)
-        blocks = mutableListOf(
-            // Vertical pillars
-            BlockObstacle("b1", 870f, 440f, 30f, 120f, Color(0xFFC68B59)), // Wood pillar left
-            BlockObstacle("b2", 970f, 440f, 30f, 120f, Color(0xFFC68B59)), // Wood pillar right
-            BlockObstacle("b3", 1030f, 440f, 30f, 120f, Color(0xFFC68B59)), 
-            BlockObstacle("b4", 1130f, 440f, 30f, 120f, Color(0xFFC68B59)), 
-            
-            // Roof planks
-            BlockObstacle("b5", 860f, 410f, 150f, 30f, Color(0xCC00F5FF), isGlass = true), // Glass ceiling
-            BlockObstacle("b6", 1020f, 410f, 150f, 30f, Color(0xCC00F5FF), isGlass = true)
-        )
-        
         particles = mutableListOf()
+        
+        when (currentLevel) {
+            1 -> {
+                // Level 1: Original Twin Towers
+                targets = mutableListOf(
+                    TargetObstacle("t1", Vector2D(920f, 500f), profile = targetProfile),
+                    TargetObstacle("t2", Vector2D(1080f, 500f), profile = targetProfile),
+                    TargetObstacle("t3", Vector2D(1000f, 320f), profile = targetProfile)
+                )
+                blocks = mutableListOf(
+                    // Vertical wooden pillars
+                    BlockObstacle("b1", 870f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    BlockObstacle("b2", 970f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    BlockObstacle("b3", 1030f, 440f, 30f, 120f, Color(0xFFC68B59)), 
+                    BlockObstacle("b4", 1130f, 440f, 30f, 120f, Color(0xFFC68B59)), 
+                    // Glass ceilings
+                    BlockObstacle("b5", 860f, 410f, 150f, 30f, Color(0xCC00F5FF), isGlass = true),
+                    BlockObstacle("b6", 1020f, 410f, 150f, 30f, Color(0xCC00F5FF), isGlass = true)
+                )
+            }
+            2 -> {
+                // Level 2: The Pyramid Arch (tunnel protecting targets underneath)
+                targets = mutableListOf(
+                    TargetObstacle("t1", Vector2D(900f, 515f), profile = targetProfile),
+                    TargetObstacle("t2", Vector2D(1060f, 515f), profile = targetProfile),
+                    TargetObstacle("t3", Vector2D(980f, 400f), profile = targetProfile)
+                )
+                blocks = mutableListOf(
+                    // Lower vertical pillars
+                    BlockObstacle("b1", 830f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    BlockObstacle("b2", 940f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    BlockObstacle("b3", 1020f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    BlockObstacle("b4", 1130f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    // Mid level glass floors
+                    BlockObstacle("b5", 820f, 410f, 160f, 30f, Color(0xCC00F5FF), isGlass = true),
+                    BlockObstacle("b6", 1010f, 410f, 160f, 30f, Color(0xCC00F5FF), isGlass = true),
+                    // Second story vertical pillars
+                    BlockObstacle("b7", 900f, 290f, 30f, 120f, Color(0xFFC68B59)),
+                    BlockObstacle("b8", 1050f, 290f, 30f, 120f, Color(0xFFC68B59)),
+                    // Top roof horizontal plank
+                    BlockObstacle("b9", 880f, 260f, 220f, 30f, Color(0xFFC68B59))
+                )
+            }
+            3 -> {
+                // Level 3: The Multi-Layer Fort
+                targets = mutableListOf(
+                    TargetObstacle("t1", Vector2D(880f, 515f), profile = targetProfile),
+                    TargetObstacle("t2", Vector2D(980f, 515f), profile = targetProfile),
+                    TargetObstacle("t3", Vector2D(1080f, 515f), profile = targetProfile),
+                    TargetObstacle("t4", Vector2D(980f, 320f), profile = targetProfile)
+                )
+                blocks = mutableListOf(
+                    // Outer glass columns
+                    BlockObstacle("b1", 800f, 440f, 30f, 120f, Color(0xCC00F5FF), isGlass = true),
+                    BlockObstacle("b2", 1140f, 440f, 30f, 120f, Color(0xCC00F5FF), isGlass = true),
+                    // Inner wooden pillars
+                    BlockObstacle("b3", 900f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    BlockObstacle("b4", 1040f, 440f, 30f, 120f, Color(0xFFC68B59)),
+                    // Mid roof platform
+                    BlockObstacle("b5", 880f, 410f, 200f, 30f, Color(0xFFC68B59)),
+                    // Top story columns
+                    BlockObstacle("b6", 930f, 290f, 30f, 120f, Color(0xCC00F5FF), isGlass = true),
+                    BlockObstacle("b7", 1010f, 290f, 30f, 120f, Color(0xCC00F5FF), isGlass = true),
+                    // Topmost heavy roof
+                    BlockObstacle("b8", 910f, 260f, 150f, 30f, Color(0xFFC68B59))
+                )
+            }
+        }
     }
 
     /**
@@ -132,9 +191,8 @@ class SlingshotGameState(
         isDragging = false
         isFlying = true
         
-        // Velocity proportional to inverse drag displacement
         val dragOffset = slingAnchor - birdPos
-        birdVel = dragOffset * 0.85f // flight intensity scalar (5.3x current speed)
+        birdVel = dragOffset * 0.85f
         
         gameStateMessage = "Flying!"
     }
@@ -161,21 +219,65 @@ class SlingshotGameState(
             }
         }
 
-        // 2. Update bird flight
+        // 2. Update block gravity physics (blocks falling down when unsupported)
+        val groundY = 560f
+        for (b in blocks) {
+            if (b.isDestroyed) continue
+            
+            var supported = false
+            if (b.top + b.height >= groundY - 2f) {
+                b.top = groundY - b.height
+                b.velY = 0f
+                supported = true
+            } else {
+                // Check if resting on top of another active block
+                for (other in blocks) {
+                    if (other === b || other.isDestroyed) continue
+                    val hOverlap = b.left < other.left + other.width && b.left + b.width > other.left
+                    if (hOverlap) {
+                        // resting distance threshold check
+                        if (Math.abs((b.top + b.height) - other.top) < 4f && b.velY >= 0f) {
+                            b.top = other.top - b.height
+                            b.velY = 0f
+                            supported = true
+                            break
+                        }
+                    }
+                }
+            }
+            
+            if (!supported) {
+                b.velY += 0.45f // apply gravity acceleration
+                b.top += b.velY
+            }
+        }
+
+        // 3. Falling blocks squashing targets underneath them
+        for (block in blocks) {
+            if (block.isDestroyed || Math.abs(block.velY) < 1.5f) continue
+            for (target in targets) {
+                if (target.isDestroyed) continue
+                if (circleCollidesWithRect(target.pos, target.radius, block)) {
+                    target.isDestroyed = true
+                    score += 200
+                    screenShake += 10f
+                    spawnExplosion(target.pos, NeonPink, count = 20)
+                }
+            }
+        }
+
+        // 4. Update bird flight and collisions
         if (isFlying) {
-            // Apply gravity
             birdVel = birdVel + gravity
             birdPos = birdPos + birdVel
             
             // Wall collisions (bounce/destroy boundaries)
-            // Ceiling boundary
             if (birdPos.y - birdRadius < 0) {
                 birdPos = Vector2D(birdPos.x, birdRadius)
                 birdVel = Vector2D(birdVel.x, -birdVel.y * bounceFactor)
             }
             
             // Ground bounce
-            val groundY = 560f
             if (birdPos.y + birdRadius > groundY) {
                 birdPos = Vector2D(birdPos.x, groundY - birdRadius)
                 birdVel = Vector2D(birdVel.x * 0.8f, -birdVel.y * bounceFactor)
@@ -186,55 +288,48 @@ class SlingshotGameState(
                 }
             }
 
-            // Right border limit
+            // Right/Left border limit
             if (birdPos.x + birdRadius > 1280f || birdPos.x - birdRadius < 0f) {
                 endFlight()
             }
 
-            // 3. Collision with Blocks (rectangles)
+            // Collision with Blocks (rectangles)
             for (block in blocks) {
                 if (block.isDestroyed) continue
                 
                 if (circleCollidesWithRect(birdPos, birdRadius, block)) {
-                    // Destroy block!
                     block.isDestroyed = true
                     score += if (block.isGlass) 50 else 100
                     screenShake += 8f
                     
-                    // Spawn particles
                     spawnExplosion(
                         center = Vector2D(block.left + block.width/2, block.top + block.height/2),
                         color = if (block.isGlass) Color(0xCC00F5FF) else Color(0xFFC68B59),
                         count = 12
                     )
 
-                    // Bounce bird slightly
                     birdVel = Vector2D(-birdVel.x * 0.6f, -birdVel.y * 0.6f)
                 }
             }
 
-            // 4. Collision with Targets (circles)
+            // Collision with Targets (circles)
             for (target in targets) {
                 if (target.isDestroyed) continue
                 
                 val dist = birdPos.distance(target.pos)
                 if (dist < birdRadius + target.radius) {
-                    // Bounce / destroy target
                     target.isDestroyed = true
                     score += 200
                     screenShake += 16f
                     
-                    // Explode!
                     spawnExplosion(target.pos, NeonPink, count = 25)
                     
-                    // Bounce bird off target
                     val normal = (birdPos - target.pos).normalize()
                     birdVel = normal * (birdVel.length() * 0.8f)
                 }
             }
         }
 
-        // Check victory / defeat conditions
         checkGameStatus()
     }
 
@@ -251,7 +346,11 @@ class SlingshotGameState(
     private fun checkGameStatus() {
         val allDestroyed = targets.all { it.isDestroyed }
         if (allDestroyed) {
-            gameStateMessage = "VICTORY! All targets defeated! Score: $score"
+            gameStateMessage = if (currentLevel < maxLevels) {
+                "VICTORY! All targets defeated in Level $currentLevel!"
+            } else {
+                "CONGRATULATIONS! Game completed! Score: $score"
+            }
             isFlying = false
         } else if (shotsLeft <= 0 && !isFlying) {
             gameStateMessage = "GAME OVER! Tap Reset to retry!"
@@ -259,7 +358,6 @@ class SlingshotGameState(
     }
 
     private fun circleCollidesWithRect(circle: Vector2D, radius: Float, rect: BlockObstacle): Boolean {
-        // Find closest point on rectangle to circle center
         val closestX = Math.max(rect.left, Math.min(circle.x, rect.left + rect.width))
         val closestY = Math.max(rect.top, Math.min(circle.y, rect.top + rect.height))
         
@@ -299,9 +397,8 @@ class SlingshotGameState(
         
         var tempPos = birdPos
         val dragOffset = slingAnchor - birdPos
-        var tempVel = dragOffset * 0.85f // Match the release launch multiplier exactly
+        var tempVel = dragOffset * 0.85f
         
-        // Project forward
         for (i in 0 until 120) {
             tempVel = tempVel + gravity
             tempPos = tempPos + tempVel
@@ -317,7 +414,7 @@ class SlingshotGameState(
             if (tempPos.y + birdRadius > groundY) {
                 tempPos = Vector2D(tempPos.x, groundY - birdRadius)
                 points.add(Offset(tempPos.x, tempPos.y))
-                break // Stop projection when it hits the ground
+                break
             }
             
             // Left/Right boundaries check

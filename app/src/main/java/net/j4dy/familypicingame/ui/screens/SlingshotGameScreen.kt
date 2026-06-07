@@ -241,6 +241,15 @@ fun SlingshotGameScreen(
                             .background(SoftGrey.copy(alpha = 0.4f))
                     )
                     
+                    Text("Level: ${gameState.currentLevel}/${gameState.maxLevels}", color = IcyWhite, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(16.dp)
+                            .background(SoftGrey.copy(alpha = 0.4f))
+                    )
+                    
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Shots: ", color = IcyWhite, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(4.dp))
@@ -336,15 +345,27 @@ fun SlingshotGameScreen(
                                     Text("ROLES", color = IcyWhite, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
                                 
-                                Button(
-                                    onClick = { gameState.resetLevel() },
-                                    modifier = Modifier.weight(1.5f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("PLAY AGAIN", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                val isVictory = gameState.targets.all { it.isDestroyed }
+                                if (isVictory && gameState.currentLevel < gameState.maxLevels) {
+                                    Button(
+                                        onClick = { gameState.nextLevel() },
+                                        modifier = Modifier.weight(1.5f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("NEXT LEVEL", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                    }
+                                } else {
+                                    Button(
+                                        onClick = { gameState.resetLevel() },
+                                        modifier = Modifier.weight(1.5f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("PLAY AGAIN", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                    }
                                 }
                             }
                         }
