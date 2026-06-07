@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -212,20 +213,23 @@ fun SnakeGameScreen(
                         .border(1.dp, CyberPurple.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                         .background(Color(0xFF0D1222))
                         .pointerInput(gameState) {
-                            // Swipe detection
-                            detectDragGestures(
-                                onDragEnd = {},
-                                onDragCancel = {}
-                            ) { change, dragAmount ->
-                                change.consume()
-                                val x = dragAmount.x
-                                val y = dragAmount.y
-                                if (Math.abs(x) > Math.abs(y)) {
-                                    if (x > 15f) gameState.setSnakeDirection(SnakeDirection.RIGHT)
-                                    else if (x < -15f) gameState.setSnakeDirection(SnakeDirection.LEFT)
+                            detectTapGestures { offset ->
+                                val w = size.width.toFloat()
+                                val h = size.height.toFloat()
+                                val cX = w / 2f
+                                val cY = h / 2f
+                                val dx = offset.x - cX
+                                val dy = offset.y - cY
+                                
+                                val normDx = dx / w
+                                val normDy = dy / h
+                                
+                                if (Math.abs(normDx) > Math.abs(normDy)) {
+                                    if (normDx > 0f) gameState.setSnakeDirection(SnakeDirection.RIGHT)
+                                    else gameState.setSnakeDirection(SnakeDirection.LEFT)
                                 } else {
-                                    if (y > 15f) gameState.setSnakeDirection(SnakeDirection.DOWN)
-                                    else if (y < -15f) gameState.setSnakeDirection(SnakeDirection.UP)
+                                    if (normDy > 0f) gameState.setSnakeDirection(SnakeDirection.DOWN)
+                                    else gameState.setSnakeDirection(SnakeDirection.UP)
                                 }
                             }
                         },
@@ -245,7 +249,7 @@ fun SnakeGameScreen(
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(
@@ -253,67 +257,21 @@ fun SnakeGameScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Score: ${gameState.score}", color = ElectricCyan, fontWeight = FontWeight.Black, fontSize = 18.sp)
-                            Text(gameState.gameMessage, color = IcyWhite, fontSize = 12.sp, maxLines = 1, fontWeight = FontWeight.SemiBold)
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Visual D-Pad overlay for easier accessibility/controls
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Empty box for spacing
-                            Spacer(modifier = Modifier.width(40.dp))
-                            
-                            // D-Pad Column
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                // Up
-                                IconButton(
-                                    onClick = { gameState.setSnakeDirection(SnakeDirection.UP) },
-                                    modifier = Modifier.size(36.dp).background(TranslucentWhite, CircleShape)
-                                ) {
-                                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Up", tint = IcyWhite)
-                                }
-                                
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    // Left
-                                    IconButton(
-                                        onClick = { gameState.setSnakeDirection(SnakeDirection.LEFT) },
-                                        modifier = Modifier.size(36.dp).background(TranslucentWhite, CircleShape)
-                                    ) {
-                                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Left", tint = IcyWhite)
-                                    }
-                                    Spacer(modifier = Modifier.size(24.dp))
-                                    // Right
-                                    IconButton(
-                                        onClick = { gameState.setSnakeDirection(SnakeDirection.RIGHT) },
-                                        modifier = Modifier.size(36.dp).background(TranslucentWhite, CircleShape)
-                                    ) {
-                                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Right", tint = IcyWhite)
-                                    }
-                                }
-                                
-                                // Down
-                                IconButton(
-                                    onClick = { gameState.setSnakeDirection(SnakeDirection.DOWN) },
-                                    modifier = Modifier.size(36.dp).background(TranslucentWhite, CircleShape)
-                                ) {
-                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Down", tint = IcyWhite)
-                                }
+                            Column {
+                                Text("Score: ${gameState.score}", color = ElectricCyan, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                                Text(gameState.gameMessage, color = IcyWhite, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                             }
                             
-                            // Replay trigger if game over
-                            Box(modifier = Modifier.width(60.dp)) {
-                                if (gameState.isGameOver) {
-                                    IconButton(
-                                        onClick = { gameState.resetGame() },
-                                        modifier = Modifier.size(40.dp).background(NeonPink, CircleShape)
-                                    ) {
-                                        Icon(Icons.Default.Refresh, contentDescription = "Restart", tint = Color.White)
-                                    }
+                            if (gameState.isGameOver) {
+                                Button(
+                                    onClick = { gameState.resetGame() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Restart", tint = Color.White, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("RETRY", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
