@@ -410,6 +410,22 @@ fun SnakeGameCanvas(
         }
         drawPath(rightPath, color = guideColor)
 
+        // 1.8 Draw active portal ripples
+        state.portalRipples.forEach { ripple ->
+            val rX = ripple.gridPos.x * cellW + cellW/2
+            val rY = ripple.gridPos.y * cellH + cellH/2
+            val maxRadius = Math.min(cellW, cellH) * 1.2f
+            val radius = maxRadius * (1f - ripple.alpha)
+            val strokeW = 3.dp.toPx() * ripple.alpha
+            
+            drawCircle(
+                color = (if (ripple.isNeonPink) NeonPink else ElectricCyan).copy(alpha = ripple.alpha),
+                radius = radius,
+                center = Offset(rX, rY),
+                style = Stroke(width = strokeW)
+            )
+        }
+
         // 2. Draw Food target (circular face)
         val foodX = state.foodPos.x * cellW + cellW/2
         val foodY = state.foodPos.y * cellH + cellH/2
@@ -466,17 +482,21 @@ fun SnakeGameCanvas(
                 val segImage = segmentBitmap.asImageBitmap()
                 drawContext.canvas.save()
                 
-                // Draw slight connector line between segments
+                // Draw slight connector line between segments (but not when wrapping boundaries)
                 if (index < state.snake.size - 1) {
                     val nextSeg = state.snake[index + 1]
-                    val nextX = nextSeg.x * cellW + cellW/2
-                    val nextY = nextSeg.y * cellH + cellH/2
-                    drawLine(
-                        color = if (isHead) ElectricCyan.copy(alpha = 0.6f) else CyberPurple.copy(alpha = 0.4f),
-                        start = segCenter,
-                        end = Offset(nextX, nextY),
-                        strokeWidth = 6f
-                    )
+                    val diffX = Math.abs(segment.x - nextSeg.x)
+                    val diffY = Math.abs(segment.y - nextSeg.y)
+                    if (diffX <= 1f && diffY <= 1f) {
+                        val nextX = nextSeg.x * cellW + cellW/2
+                        val nextY = nextSeg.y * cellH + cellH/2
+                        drawLine(
+                            color = if (isHead) ElectricCyan.copy(alpha = 0.6f) else CyberPurple.copy(alpha = 0.4f),
+                            start = segCenter,
+                            end = Offset(nextX, nextY),
+                            strokeWidth = 6f
+                        )
+                    }
                 }
 
                 // Draw circle clip avatar
@@ -509,12 +529,12 @@ fun SnakeGameCanvas(
             }
         }
 
-        // 4. Draw food sparkle particles on chomps
+        // 4. Draw food sparkle particles on chomps / portal wrap
         state.sparkles.forEach { s ->
             val spX = s.gridPos.x * cellW + cellW/2 + s.offset.x
             val spY = s.gridPos.y * cellH + cellH/2 + s.offset.y
             drawCircle(
-                color = ElectricCyan.copy(alpha = s.alpha),
+                color = (if (s.isNeonPink) NeonPink else ElectricCyan).copy(alpha = s.alpha),
                 radius = 4f * s.alpha,
                 center = Offset(spX, spY)
             )

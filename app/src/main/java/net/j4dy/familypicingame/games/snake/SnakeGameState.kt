@@ -18,7 +18,14 @@ data class SparkleParticle(
     var speed: Vector2D,
     var alpha: Float = 1f,
     var age: Int = 0,
-    val maxAge: Int = 15
+    val maxAge: Int = 15,
+    val isNeonPink: Boolean = false
+)
+
+data class PortalRipple(
+    val gridPos: Vector2D,
+    var alpha: Float = 1.0f,
+    val isNeonPink: Boolean = false
 )
 
 class SnakeGameState(
@@ -41,6 +48,9 @@ class SnakeGameState(
     
     // Sparkles when snake eats food
     val sparkles = mutableStateListOf<SparkleParticle>()
+    
+    // Active portal ripples
+    val portalRipples = mutableStateListOf<PortalRipple>()
 
     private val random = Random()
 
@@ -61,6 +71,7 @@ class SnakeGameState(
         isGameOver = false
         gameMessage = "Chomp the family food!"
         sparkles.clear()
+        portalRipples.clear()
         spawnFood()
     }
 
@@ -115,7 +126,18 @@ class SnakeGameState(
             nextHead.y >= gridHeight -> 0f
             else -> nextHead.y
         }
+        
+        val didWrap = (wrappedX != nextHead.x) || (wrappedY != nextHead.y)
+        val wrapExit = head
+        
         nextHead = Vector2D(wrappedX, wrappedY)
+
+        if (didWrap) {
+            portalRipples.add(PortalRipple(gridPos = wrapExit, isNeonPink = false))
+            portalRipples.add(PortalRipple(gridPos = nextHead, isNeonPink = true))
+            spawnPortalSparkles(wrapExit, isNeonPink = false)
+            spawnPortalSparkles(nextHead, isNeonPink = true)
+        }
 
         // Check self-collision (excluding tail if it's going to move, but standard is checking body)
         if (snake.contains(nextHead)) {
@@ -152,6 +174,16 @@ class SnakeGameState(
                 sIterator.remove()
             }
         }
+
+        // Update portal ripples
+        val rIterator = portalRipples.iterator()
+        while (rIterator.hasNext()) {
+            val r = rIterator.next()
+            r.alpha -= 0.15f
+            if (r.alpha <= 0f) {
+                rIterator.remove()
+            }
+        }
     }
 
     private fun spawnSparkles(pos: Vector2D) {
@@ -168,6 +200,26 @@ class SnakeGameState(
                     offset = Vector2D(0f, 0f),
                     speed = speed,
                     maxAge = 10 + random.nextInt(10)
+                )
+            )
+        }
+    }
+
+    private fun spawnPortalSparkles(pos: Vector2D, isNeonPink: Boolean) {
+        for (i in 0 until 8) {
+            val angle = random.nextFloat() * 2 * Math.PI
+            val speedScalar = 0.5f + random.nextFloat() * 2f
+            val speed = Vector2D(
+                (Math.cos(angle) * speedScalar).toFloat(),
+                (Math.sin(angle) * speedScalar).toFloat()
+            )
+            sparkles.add(
+                SparkleParticle(
+                    gridPos = pos,
+                    offset = Vector2D(0f, 0f),
+                    speed = speed,
+                    maxAge = 8 + random.nextInt(8),
+                    isNeonPink = isNeonPink
                 )
             )
         }
