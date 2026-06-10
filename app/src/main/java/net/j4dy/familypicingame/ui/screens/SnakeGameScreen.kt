@@ -214,6 +214,35 @@ fun SnakeGameScreen(
                         .border(1.dp, CyberPurple.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                         .background(Color(0xFF0D1222))
                         .pointerInput(gameState) {
+                            var dragAccumulator = Offset.Zero
+                            detectDragGestures(
+                                onDragStart = {
+                                    dragAccumulator = Offset.Zero
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    dragAccumulator += dragAmount
+                                    val threshold = 50f // pixels to trigger a turn
+                                    if (dragAccumulator.getDistance() > threshold) {
+                                        if (Math.abs(dragAccumulator.x) > Math.abs(dragAccumulator.y)) {
+                                            if (dragAccumulator.x > 0f) gameState.setSnakeDirection(SnakeDirection.RIGHT)
+                                            else gameState.setSnakeDirection(SnakeDirection.LEFT)
+                                        } else {
+                                            if (dragAccumulator.y > 0f) gameState.setSnakeDirection(SnakeDirection.DOWN)
+                                            else gameState.setSnakeDirection(SnakeDirection.UP)
+                                        }
+                                        dragAccumulator = Offset.Zero // reset for continuous swipe turns
+                                    }
+                                },
+                                onDragEnd = {
+                                    dragAccumulator = Offset.Zero
+                                },
+                                onDragCancel = {
+                                    dragAccumulator = Offset.Zero
+                                }
+                            )
+                        }
+                        .pointerInput(gameState) {
                             detectTapGestures { offset ->
                                 val w = size.width.toFloat()
                                 val h = size.height.toFloat()
