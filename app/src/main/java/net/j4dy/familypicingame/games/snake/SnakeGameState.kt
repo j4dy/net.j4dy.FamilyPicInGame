@@ -97,19 +97,25 @@ class SnakeGameState(
 
         // Calculate new head position
         val head = snake.first()
-        val nextHead = when (direction) {
+        var nextHead = when (direction) {
             SnakeDirection.UP -> Vector2D(head.x, head.y - 1)
             SnakeDirection.DOWN -> Vector2D(head.x, head.y + 1)
             SnakeDirection.LEFT -> Vector2D(head.x - 1, head.y)
             SnakeDirection.RIGHT -> Vector2D(head.x + 1, head.y)
         }
 
-        // Check boundary collisions
-        if (nextHead.x < 0 || nextHead.x >= gridWidth || nextHead.y < 0 || nextHead.y >= gridHeight) {
-            isGameOver = true
-            gameMessage = "Ouch! Crashed into the border! Score: $score"
-            return
+        // Wrap around grid boundaries (screen-wrap)
+        val wrappedX = when {
+            nextHead.x < 0 -> (gridWidth - 1).toFloat()
+            nextHead.x >= gridWidth -> 0f
+            else -> nextHead.x
         }
+        val wrappedY = when {
+            nextHead.y < 0 -> (gridHeight - 1).toFloat()
+            nextHead.y >= gridHeight -> 0f
+            else -> nextHead.y
+        }
+        nextHead = Vector2D(wrappedX, wrappedY)
 
         // Check self-collision (excluding tail if it's going to move, but standard is checking body)
         if (snake.contains(nextHead)) {
