@@ -64,6 +64,7 @@ fun WhackGameScreen(
     var gameStarted by remember { mutableStateOf(false) }
     var teamA by remember { mutableStateOf(setOf<String>()) } // Teammates (avoid)
     var teamB by remember { mutableStateOf(setOf<String>()) } // Opponents (whack)
+    var speedMultiplier by remember { mutableStateOf(2.0f) }   // Default 2.0x (double speed)
     
     if (!gameStarted) {
         // Selection Screen
@@ -124,7 +125,7 @@ fun WhackGameScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     // Team B (Opponents) Selector
                     Text("Select Opponents (Team B - Whack Them!):", color = IcyWhite, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
@@ -148,6 +149,36 @@ fun WhackGameScreen(
                                     }
                                 }
                             )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Speed Control settings
+                    Text("Select Speed Multiplier:", color = IcyWhite, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val speeds = listOf(1.0f, 1.5f, 2.0f, 3.0f)
+                        val labels = listOf("1.0x (Slow)", "1.5x (Normal)", "2.0x (Fast)", "3.0x (Insane)")
+                        
+                        speeds.forEachIndexed { i, speed ->
+                            val isSelected = speedMultiplier == speed
+                            Button(
+                                onClick = { speedMultiplier = speed },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isSelected) ElectricCyan else CardSlate,
+                                    contentColor = if (isSelected) Color.Black else IcyWhite
+                                ),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, SoftGrey.copy(alpha = 0.3f))
+                            ) {
+                                Text(labels[i], fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -175,10 +206,11 @@ fun WhackGameScreen(
         }
     } else {
         // Game Playing Screen
-        val gameState = remember(teamA, teamB) {
+        val gameState = remember(teamA, teamB, speedMultiplier) {
             WhackGameState(
                 teamAProfiles = profiles.filter { it.id in teamA },
-                teamBProfiles = profiles.filter { it.id in teamB }
+                teamBProfiles = profiles.filter { it.id in teamB },
+                speedMultiplier = speedMultiplier
             )
         }
         var canvasSize by remember { mutableStateOf(Size.Zero) }
@@ -205,7 +237,7 @@ fun WhackGameScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Teammates vs Opponents", fontWeight = FontWeight.Bold) },
+                    title = { Text("Teammates vs Opponents (${speedMultiplier}x)", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = { gameStarted = false }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = IcyWhite)
@@ -259,7 +291,7 @@ fun WhackGameScreen(
                     trackColor = CyberPurple.copy(alpha = 0.2f)
                 )
 
-                // Game Play Grid with Tap Coordinates
+                // Game Play Grid with Tap Coordinates (3x4 Grid)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -274,9 +306,9 @@ fun WhackGameScreen(
                             detectTapGestures(
                                 onTap = { offset ->
                                     val cellW = canvasSize.width / 3f
-                                    val cellH = canvasSize.height / 3f
+                                    val cellH = canvasSize.height / 4f
                                     val col = (offset.x / cellW).toInt().coerceIn(0, 2)
-                                    val row = (offset.y / cellH).toInt().coerceIn(0, 2)
+                                    val row = (offset.y / cellH).toInt().coerceIn(0, 3)
                                     val index = row * 3 + col
                                     gameState.whackCell(index)
                                 }
@@ -381,7 +413,7 @@ fun WhackGameCanvas(
         val h = size.height
         
         val cellW = w / 3f
-        val cellH = h / 3f
+        val cellH = h / 4f // 3 columns by 4 rows (12 slots)
         
         // 1. Draw glowing grid partition borders
         for (i in 1..2) {
@@ -392,6 +424,8 @@ fun WhackGameCanvas(
                 end = Offset(i * cellW, h),
                 strokeWidth = 2f
             )
+        }
+        for (i in 1..3) {
             // Horizontal separators
             drawLine(
                 color = CyberPurple.copy(alpha = 0.2f),
@@ -402,7 +436,7 @@ fun WhackGameCanvas(
         }
 
         // 2. Draw holes & popped up characters
-        for (row in 0..2) {
+        for (row in 0..3) {
             for (col in 0..2) {
                 val index = row * 3 + col
                 val portal = state.portals[index]

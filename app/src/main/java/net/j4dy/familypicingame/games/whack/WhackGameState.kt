@@ -32,9 +32,11 @@ class WhackSparkle(
 
 class WhackGameState(
     val teamAProfiles: List<FaceProfile>,
-    val teamBProfiles: List<FaceProfile>
+    val teamBProfiles: List<FaceProfile>,
+    val speedMultiplier: Float = 2.0f // Default is now 2.0x (double speed)
 ) {
-    val portals = List(9) { PortalState(it) }
+    // 12 portal slots instead of 9 (3x4 layout)
+    val portals = List(12) { PortalState(it) }
     val sparkles = mutableStateListOf<WhackSparkle>()
     
     var score by mutableStateOf(0)
@@ -50,21 +52,25 @@ class WhackGameState(
     
     // Scale speed as score gets higher
     private fun getSpawnInterval(): Int {
-        return when {
+        val base = when {
             score > 5000 -> 30 // spawn every 30 frames (~500ms)
             score > 3000 -> 40
             score > 1000 -> 50
             else -> 60 // ~1s
         }
+        // Apply speed multiplier (halves intervals when multiplier is 2.0x)
+        return (base / speedMultiplier).toInt().coerceAtLeast(10)
     }
     
     private fun getPortalDuration(): Int {
-        return when {
+        val base = when {
             score > 5000 -> 45 // stays up for 750ms
             score > 3000 -> 60
             score > 1000 -> 75
             else -> 90 // stays up for 1.5s
         }
+        // Apply speed multiplier (halves duration when multiplier is 2.0x)
+        return (base / speedMultiplier).toInt().coerceAtLeast(15)
     }
 
     fun startGame() {
@@ -80,7 +86,7 @@ class WhackGameState(
             it.familyProfile = null
             it.showTimeLeft = 0
         }
-        gameMessage = "Go Team! Whack opponents!"
+        gameMessage = "Go Team! Speed: ${speedMultiplier}x!"
     }
 
     fun resetGame() {
@@ -164,7 +170,7 @@ class WhackGameState(
     }
 
     fun whackCell(index: Int) {
-        if (!isPlaying || isGameOver || index !in 0..8) return
+        if (!isPlaying || isGameOver || index !in 0..11) return
         
         val portal = portals[index]
         when (portal.type) {
