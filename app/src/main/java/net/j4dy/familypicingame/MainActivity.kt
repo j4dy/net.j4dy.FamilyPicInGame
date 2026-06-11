@@ -46,6 +46,12 @@ class MainActivity : ComponentActivity() {
                     val registeredGames = remember {
                         listOf(
                             GameDescriptor(
+                                id = "pacman",
+                                title = "Family Pac-Man",
+                                description = "Munch neon dots in a retro maze as your favorite family member and escape family ghosts!",
+                                route = "game_pacman"
+                            ),
+                            GameDescriptor(
                                 id = "slingshot",
                                 title = "Family Slingshot",
                                 description = "Launch your family birds with a neon slingshot to crash wood & glass defenses!",
@@ -68,12 +74,6 @@ class MainActivity : ComponentActivity() {
                                 title = "Whack-a-Monster",
                                 description = "Tap pop-up alien monsters but avoid tapping your family members!",
                                 route = "game_whack"
-                            ),
-                            GameDescriptor(
-                                id = "pacman",
-                                title = "Family Pac-Man",
-                                description = "Munch neon dots in a retro maze as your favorite family member and escape family ghosts!",
-                                route = "game_pacman"
                             )
                         )
                     }
