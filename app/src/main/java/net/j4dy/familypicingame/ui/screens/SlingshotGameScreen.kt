@@ -342,7 +342,7 @@ fun SlingshotGameScreen(
                                     shape = RoundedCornerShape(8.dp),
                                     border = androidx.compose.foundation.BorderStroke(1.dp, SoftGrey)
                                 ) {
-                                    Text("ROLES", color = IcyWhite, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    Text("ROLES", color = IcyWhite, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                 }
                                 
                                 val isVictory = gameState.targets.all { it.isDestroyed }
@@ -353,7 +353,7 @@ fun SlingshotGameScreen(
                                         colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("NEXT LEVEL", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                        Text("NEXT LEVEL", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 16.sp)
                                     }
                                 } else {
                                     Button(
@@ -364,7 +364,7 @@ fun SlingshotGameScreen(
                                     ) {
                                         Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("PLAY AGAIN", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                        Text("PLAY AGAIN", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
                                     }
                                 }
                             }

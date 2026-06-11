@@ -301,11 +301,12 @@ fun FlappyGameScreen(
                             Button(
                                 onClick = { gameState.startGame() },
                                 colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                             ) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White)
+                                Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("RETRY", fontWeight = FontWeight.Bold)
+                                Text("RETRY", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             }
                         }
                     }

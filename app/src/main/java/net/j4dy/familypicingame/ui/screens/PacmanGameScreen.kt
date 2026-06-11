@@ -328,11 +328,12 @@ fun PacmanGameScreen(
                                     gameState.startGame()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                             ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Start", tint = Color.White)
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Start", tint = Color.White, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(if (gameState.isGameOver || gameState.isVictory) "PLAY AGAIN" else "START MATCH", fontWeight = FontWeight.Bold)
+                                Text(if (gameState.isGameOver || gameState.isVictory) "PLAY AGAIN" else "START MATCH", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             }
                         }
                     }
