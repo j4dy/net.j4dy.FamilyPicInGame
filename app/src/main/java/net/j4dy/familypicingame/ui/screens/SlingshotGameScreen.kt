@@ -206,16 +206,20 @@ fun SlingshotGameScreen(
             }
 
             // 2. Floating Reset Button (top-right)
-            IconButton(
+            Button(
                 onClick = { gameState.resetLevel() },
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.TopEnd)
-                    .size(44.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                    .border(1.dp, ElectricCyan.copy(alpha = 0.5f), CircleShape)
+                    .height(44.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black.copy(alpha = 0.6f)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ElectricCyan.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(22.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = "Reset Level", tint = ElectricCyan)
+                Icon(Icons.Default.Refresh, contentDescription = "Reset Level", tint = ElectricCyan, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("RESET", color = ElectricCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
             // 3. Floating HUD Badge (top-center glassmorphic bar)
@@ -339,10 +343,11 @@ fun SlingshotGameScreen(
                                     onClick = { gameStarted = false },
                                     modifier = Modifier.weight(1f),
                                     colors = ButtonDefaults.buttonColors(containerColor = CardSlate.copy(alpha = 0.5f)),
-                                    shape = RoundedCornerShape(8.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, SoftGrey)
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, SoftGrey),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp)
                                 ) {
-                                    Text("ROLES", color = IcyWhite, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    Text("ROLES", color = IcyWhite, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                                 }
                                 
                                 val isVictory = gameState.targets.all { it.isDestroyed }
@@ -351,20 +356,22 @@ fun SlingshotGameScreen(
                                         onClick = { gameState.nextLevel() },
                                         modifier = Modifier.weight(1.5f),
                                         colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
-                                        shape = RoundedCornerShape(8.dp)
+                                        shape = RoundedCornerShape(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp)
                                     ) {
-                                        Text("NEXT LEVEL", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                                        Text("NEXT LEVEL", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 22.sp)
                                     }
                                 } else {
                                     Button(
                                         onClick = { gameState.resetLevel() },
                                         modifier = Modifier.weight(1.5f),
                                         colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
-                                        shape = RoundedCornerShape(8.dp)
+                                        shape = RoundedCornerShape(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp)
                                     ) {
-                                        Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("PLAY AGAIN", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                                        Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(24.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("PLAY AGAIN", color = Color.White, fontWeight = FontWeight.Black, fontSize = 22.sp)
                                     }
                                 }
                             }

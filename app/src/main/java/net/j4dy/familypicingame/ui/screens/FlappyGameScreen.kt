@@ -212,8 +212,13 @@ fun FlappyGameScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { gameState.resetGame() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = ElectricCyan)
+                        TextButton(
+                            onClick = { gameState.resetGame() },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = ElectricCyan, modifier = Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("RESET", color = ElectricCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepDarkBlue)
@@ -301,12 +306,12 @@ fun FlappyGameScreen(
                             Button(
                                 onClick = { gameState.startGame() },
                                 colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
                             ) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("RETRY", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = Color.White, modifier = Modifier.size(24.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("RETRY / RESET", fontWeight = FontWeight.Bold, fontSize = 22.sp)
                             }
                         }
                     }

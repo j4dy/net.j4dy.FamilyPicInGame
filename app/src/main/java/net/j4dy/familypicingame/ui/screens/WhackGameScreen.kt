@@ -244,8 +244,13 @@ fun WhackGameScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { gameState.resetGame() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = ElectricCyan)
+                        TextButton(
+                            onClick = { gameState.resetGame() },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = ElectricCyan, modifier = Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("RESET", color = ElectricCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepDarkBlue)
@@ -351,11 +356,11 @@ fun WhackGameScreen(
                                 onClick = { gameState.startGame() },
                                 colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
                                 shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
                             ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Start", tint = Color.White, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(if (gameState.isGameOver) "PLAY AGAIN" else "START MATCH", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Start", tint = Color.White, modifier = Modifier.size(26.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(if (gameState.isGameOver) "PLAY AGAIN / RESET" else "START MATCH", fontWeight = FontWeight.Bold, fontSize = 22.sp)
                             }
                         }
                     }
