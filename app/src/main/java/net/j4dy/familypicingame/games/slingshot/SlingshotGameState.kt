@@ -386,7 +386,14 @@ class SlingshotGameState(
                         count = 12
                     )
 
-                    birdVel = Vector2D(-birdVel.x * 0.6f, -birdVel.y * 0.6f)
+                    val normal = Vector2D(birdPos.x - closestX, birdPos.y - closestY)
+                    val unitNormal = if (normal.length() > 0.1f) normal.normalize() else Vector2D(0f, -1f)
+                    
+                    val dot = birdVel.dot(unitNormal)
+                    val reflectedVel = birdVel - unitNormal * (2f * dot)
+                    
+                    val speedLoss = if (block.isGlass) 0.9f else 0.8f
+                    birdVel = (birdVel * 0.8f + reflectedVel * 0.2f) * speedLoss
                 }
             }
 
