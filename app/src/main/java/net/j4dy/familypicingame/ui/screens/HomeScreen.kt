@@ -7,6 +7,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.*
@@ -101,30 +103,31 @@ fun HomeScreen(
             }
 
             // Games Container
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(vertical = 32.dp),
-                verticalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "SELECT MISSION",
-                    color = SoftGrey.copy(alpha = 0.8f),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 2.sp,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    textAlign = TextAlign.Start
-                )
+                item {
+                    Text(
+                        text = "SELECT MISSION",
+                        color = SoftGrey.copy(alpha = 0.8f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        textAlign = TextAlign.Start
+                    )
+                }
 
-                games.forEach { game ->
+                items(games) { game ->
                     GameCard(
                         game = game,
                         onClick = { onGameSelect(game) }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
