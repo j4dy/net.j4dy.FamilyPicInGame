@@ -16,8 +16,15 @@ class FlappyPipe(
     var passed: Boolean = false
 )
 
+enum class FlappyDifficulty(val displayName: String, val gapHeight: Float) {
+    EASY("Space Cadet", 340f),
+    MEDIUM("Pilot", 280f),
+    HARD("Astronaut", 220f)
+}
+
 class FlappyGameState(
-    val playerProfile: FaceProfile
+    val playerProfile: FaceProfile,
+    val difficulty: FlappyDifficulty = FlappyDifficulty.HARD
 ) {
     var birdY by mutableStateOf(400f)
     var birdVelocity by mutableStateOf(0f)
@@ -140,7 +147,7 @@ class FlappyGameState(
 
     private fun spawnPipe(canvasWidth: Float, canvasHeight: Float) {
         // Gap size (adjust for difficulty)
-        val gapHeight = 220f
+        val gapHeight = difficulty.gapHeight
         val minHeight = 100f
         val maxHeight = canvasHeight - gapHeight - minHeight
         

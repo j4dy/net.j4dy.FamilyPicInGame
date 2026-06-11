@@ -62,6 +62,7 @@ fun FlappyGameScreen(
     val profiles = remember { faceStorage.getProfiles() }
     
     var selectedPilot by remember { mutableStateOf<FaceProfile?>(null) }
+    var selectedDifficulty by remember { mutableStateOf(FlappyDifficulty.HARD) }
     var gameStarted by remember { mutableStateOf(false) }
 
     if (!gameStarted) {
@@ -120,6 +121,47 @@ fun FlappyGameScreen(
                             )
                         }
                     }
+                    
+                    Spacer(modifier = Modifier.height(28.dp))
+                    
+                    Text(
+                        "Select Mission Difficulty (Gap size):",
+                        color = IcyWhite,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FlappyDifficulty.values().forEach { diff ->
+                            val isSelected = selectedDifficulty == diff
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) NeonPink else CardSlate.copy(alpha = 0.5f))
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isSelected) ElectricCyan else SoftGrey.copy(alpha = 0.3f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { selectedDifficulty = diff },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = diff.displayName,
+                                    color = if (isSelected) Color.White else SoftGrey,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Button(
@@ -145,7 +187,9 @@ fun FlappyGameScreen(
         }
     } else {
         // Main Game loop and Screen
-        val gameState = remember { FlappyGameState(selectedPilot!!) }
+        val gameState = remember(selectedPilot, selectedDifficulty) {
+            FlappyGameState(selectedPilot!!, selectedDifficulty)
+        }
         var canvasSize by remember { mutableStateOf(Size.Zero) }
 
         // Tick loop (16ms = ~60fps)
@@ -250,7 +294,7 @@ fun FlappyGameScreen(
                     ) {
                         Column {
                             Text("Score: ${gameState.score}", color = ElectricCyan, fontWeight = FontWeight.Black, fontSize = 20.sp)
-                            Text(gameState.gameMessage, color = IcyWhite, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Text("${gameState.gameMessage} • ${gameState.difficulty.displayName}", color = IcyWhite, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                         
                         if (gameState.isGameOver) {
