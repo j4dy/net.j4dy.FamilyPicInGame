@@ -22,6 +22,7 @@ import net.j4dy.familypicingame.games.flappy.FlappyGameScreen
 import net.j4dy.familypicingame.games.slingshot.SlingshotGameScreen
 import net.j4dy.familypicingame.games.snake.SnakeGameScreen
 import net.j4dy.familypicingame.games.whack.WhackGameScreen
+import net.j4dy.familypicingame.games.pacman.PacmanGameScreen
 import net.j4dy.familypicingame.ui.screens.FaceCropScreen
 import net.j4dy.familypicingame.ui.screens.FaceManagerScreen
 import net.j4dy.familypicingame.ui.screens.HomeScreen
@@ -67,6 +68,12 @@ class MainActivity : ComponentActivity() {
                                 title = "Whack-a-Monster",
                                 description = "Tap pop-up alien monsters but avoid tapping your family members!",
                                 route = "game_whack"
+                            ),
+                            GameDescriptor(
+                                id = "pacman",
+                                title = "Family Pac-Man",
+                                description = "Munch neon dots in a retro maze as your favorite family member and escape family ghosts!",
+                                route = "game_pacman"
                             )
                         )
                     }
@@ -151,6 +158,15 @@ class MainActivity : ComponentActivity() {
                         // Whack-a-Monster Game Screen
                         composable("game_whack") {
                             WhackGameScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+                        
+                        // Pac-Man Game Screen
+                        composable("game_pacman") {
+                            PacmanGameScreen(
                                 onBackClick = {
                                     navController.popBackStack()
                                 }
