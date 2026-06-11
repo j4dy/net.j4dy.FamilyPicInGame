@@ -541,7 +541,7 @@ fun PacmanGameCanvas(
         }
 
         // 4. Draw Ghosts
-        state.ghosts.forEach { ghost ->
+        state.ghosts.toList().forEach { ghost ->
             val gOffset = getInterpolatedDrawOffset(
                 ghost.currentPos,
                 ghost.nextPos,
@@ -616,8 +616,8 @@ fun PacmanGameCanvas(
                 val bitmap = allBitmaps[ghost.id]
                 if (bitmap != null) {
                     val image = bitmap.asImageBitmap()
-                    val faceRadius = gRadius * 0.55f
-                    val faceY = gOffset.y - gRadius * 0.15f
+                    val faceRadius = gRadius * 0.85f
+                    val faceY = gOffset.y - gRadius * 0.05f
                     
                     drawContext.canvas.save()
                     val circleClip = Path().apply {
@@ -647,7 +647,7 @@ fun PacmanGameCanvas(
         }
 
         // 5. Draw sparkles (score texts)
-        state.sparkles.forEach { s ->
+        state.sparkles.toList().forEach { s ->
             drawContext.canvas.save()
             // Floating text drawn on Canvas
             val paint = android.graphics.Paint().apply {

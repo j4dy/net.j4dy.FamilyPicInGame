@@ -214,7 +214,7 @@ class PacmanGameState(
         if (frightenedTimer > 0) {
             frightenedTimer--
             if (frightenedTimer == 0) {
-                ghosts.forEach { it.isVulnerable = false }
+                ghosts.toList().forEach { it.isVulnerable = false }
                 ghostEatenMultiplier = 1
             }
         }
@@ -259,7 +259,7 @@ class PacmanGameState(
         if (ghostProgress >= 1.0f) {
             ghostProgress = 0f
             
-            ghosts.forEach { ghost ->
+            ghosts.toList().forEach { ghost ->
                 ghost.currentPos = ghost.nextPos
                 
                 // If ghost is eaten and reaches ghost house, revive it
@@ -305,7 +305,7 @@ class PacmanGameState(
     private fun triggerPowerPellet() {
         frightenedTimer = 450 // stays up for 450 frames (~7.5 seconds)
         ghostEatenMultiplier = 1
-        ghosts.forEach { ghost ->
+        ghosts.toList().forEach { ghost ->
             if (!ghost.isEaten) {
                 ghost.isVulnerable = true
             }
@@ -325,7 +325,7 @@ class PacmanGameState(
         // Calculate interpolated coordinate offsets for collision check
         val pOffset = getInterpolatedGridOffset(playerCurrentPos, playerNextPos, moveProgress)
         
-        ghosts.forEach { ghost ->
+        ghosts.toList().forEach { ghost ->
             val gOffset = getInterpolatedGridOffset(ghost.currentPos, ghost.nextPos, ghostProgress)
             val dist = pOffset.distance(gOffset)
             
@@ -348,6 +348,7 @@ class PacmanGameState(
                 } else if (!ghost.isEaten && !ghost.isVulnerable) {
                     // Lose a life!
                     loseLife()
+                    return
                 }
             }
         }
@@ -396,7 +397,7 @@ class PacmanGameState(
                 playerCurrentPos.plus(playerDir).plus(playerDir)
             }
             2 -> { // Inky (Cyan): Mirror vector from Pacman to Blinky
-                val blinky = ghosts.firstOrNull { it.colorIndex == 0 }
+                val blinky = ghosts.toList().firstOrNull { it.colorIndex == 0 }
                 if (blinky != null) {
                     val pX = playerCurrentPos.x
                     val pY = playerCurrentPos.y
