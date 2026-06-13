@@ -7,7 +7,6 @@ import '../../theme.dart';
 import '../../models/face_profile.dart';
 import '../../data/face_storage.dart';
 import '../../games/snake/snake_game_state.dart';
-import '../../games/common/vector_2d.dart';
 
 class SnakeGameScreen extends StatefulWidget {
   final FaceStorage faceStorage;

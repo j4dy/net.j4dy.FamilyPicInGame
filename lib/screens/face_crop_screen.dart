@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../theme.dart';
 import '../../data/face_storage.dart';
@@ -23,8 +22,6 @@ class FaceCropScreen extends StatefulWidget {
   @override
   State<FaceCropScreen> createState() => _FaceCropScreenState();
 }
-
-class _HomeScreenState {}
 
 class _FaceCropScreenState extends State<FaceCropScreen> {
   ui.Image? _uiImage;
