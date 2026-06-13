@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Pic-in-Game | Cyberpunk Mobile Arcade Suite</title>
+  <meta name="description" content="A premium cross-platform mobile game suite built with Flutter and Dart. Crop family faces permissionlessly and play classic arcade & slingshot physics games!">
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Tier 1: Literals */
+      --color-dark-950: #07090e;
+      --color-dark-900: #0a0e17;
+      --color-dark-800: #101626;
+      --color-dark-700: #1b223c;
+      --color-cyan-neon: #00f0ff;
+      --color-pink-neon: #ff007f;
+      --color-purple-neon: #9d00ff;
+      --color-white: #f5f6f9;
+      --color-grey-soft: #9da3b4;
+      
+      /* Tier 2: Semantics */
+      --bg-primary: var(--color-dark-950);
+      --bg-surface: var(--color-dark-900);
+      --bg-card: rgba(27, 34, 60, 0.4);
+      --text-title: var(--color-white);
+      --text-body: var(--color-grey-soft);
+      --text-accent-cyan: var(--color-cyan-neon);
+      --text-accent-pink: var(--color-pink-neon);
+      
+      /* Fonts */
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      /* Transitions */
+      --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Base Reset & Styling */
+    * {
+      box-sizing: border-box;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-body);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      margin: 0;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Cosmic Grid Background */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-position: center;
+      mask-image: radial-gradient(circle at 50% 30%, black, transparent 85%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Ambient Glowing Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(140px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .orb-cyan {
+      width: 500px;
+      height: 500px;
+      background: var(--color-cyan-neon);
+      top: 5%;
+      left: -150px;
+    }
+    .orb-pink {
+      width: 600px;
+      height: 600px;
+      background: var(--color-pink-neon);
+      top: 45%;
+      right: -200px;
+    }
+    .orb-purple {
+      width: 500px;
+      height: 500px;
+      background: var(--color-purple-neon);
+      bottom: 10%;
+      left: 10%;
+    }
+
+    /* Container alignment */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin-inline: auto;
+      padding-inline: 24px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Header Nav */
+    header {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(7, 9, 14, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 80px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-title);
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--color-white);
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    .brand span {
+      background: linear-gradient(135deg, var(--color-pink-neon), var(--color-purple-neon), var(--color-cyan-neon));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: var(--text-body);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 15px;
+      transition: var(--transition-fast);
+      padding-block: 8px;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      color: var(--color-cyan-neon);
+      outline: none;
+    }
+
+    /* Primary Cyber Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 28px;
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      border-radius: 30px;
+      transition: var(--transition-fast);
+      border: 1px solid transparent;
+      min-block-size: 48px;
+      cursor: pointer;
+    }
+
+    .btn-cyan {
+      background: rgba(0, 240, 255, 0.1);
+      border-color: var(--color-cyan-neon);
+      color: var(--color-cyan-neon);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    }
+    .btn-cyan:hover,
+    .btn-cyan:focus-visible {
+      background: var(--color-cyan-neon);
+      color: var(--color-dark-950);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+      outline: none;
+    }
+
+    .btn-pink {
+      background: rgba(255, 0, 127, 0.1);
+      border-color: var(--color-pink-neon);
+      color: var(--color-pink-neon);
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.2);
+    }
+    .btn-pink:hover,
+    .btn-pink:focus-visible {
+      background: var(--color-pink-neon);
+      color: var(--color-white);
+      box-shadow: 0 0 25px rgba(255, 0, 127, 0.4);
+      outline: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: var(--color-white);
+    }
+    .btn-secondary:hover,
+    .btn-secondary:focus-visible {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+      outline: none;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding-block: 80px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: center;
+      gap: 64px;
+    }
+
+    .hero-content h1 {
+      font-family: var(--font-title);
+      font-size: 54px;
+      line-height: 1.1;
+      font-weight: 900;
+      color: var(--color-white);
+      margin: 0 0 20px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-content h1 span {
+      background: linear-gradient(135deg, var(--color-cyan-neon), var(--color-purple-neon), var(--color-pink-neon));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-content p {
+      font-size: 18px;
+      color: var(--text-body);
+      margin: 0 0 32px 0;
+      max-width: 540px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hero-mockup {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .mockup-img {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 36px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(0, 240, 255, 0.1);
+      transition: var(--transition-normal);
+    }
+
+    .mockup-img:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 
+        0 25px 45px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(0, 240, 255, 0.25);
+    }
+
+    /* Grid layout */
+    .section-title {
+      font-family: var(--font-title);
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--color-white);
+      text-align: center;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .section-desc {
+      text-align: center;
+      color: var(--text-body);
+      max-width: 600px;
+      margin: 0 auto 56px auto;
+      font-size: 16px;
+    }
+
+    /* Games Section */
+    .games-section {
+      padding-block: 80px;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 32px;
+    }
+
+    /* Cyber Glass Card */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 32px;
+      transition: var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 50%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      background: rgba(27, 34, 60, 0.55);
+      border-color: rgba(0, 240, 255, 0.3);
+      box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(0, 240, 255, 0.1);
+    }
+
+    .card-pink:hover {
+      border-color: rgba(255, 0, 127, 0.3);
+      box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(255, 0, 127, 0.1);
+    }
+
+    .card-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .card-icon-cyan {
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--color-cyan-neon);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+    
+    .card-icon-pink {
+      background: rgba(255, 0, 127, 0.1);
+      color: var(--color-pink-neon);
+      border: 1px solid rgba(255, 0, 127, 0.2);
+    }
+
+    .card-icon svg {
+      width: 28px;
+      height: 28px;
+      fill: currentColor;
+    }
+
+    .card h3 {
+      font-family: var(--font-title);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-white);
+      margin: 0 0 12px 0;
+    }
+
+    .card p {
+      font-size: 15px;
+      color: var(--text-body);
+      margin: 0 0 20px 0;
+      flex-grow: 1;
+    }
+
+    .card-tag {
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    .tag-cyan {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--color-cyan-neon);
+    }
+    .tag-pink {
+      background: rgba(255, 0, 127, 0.15);
+      color: var(--color-pink-neon);
+    }
+
+    /* Core Features Section */
+    .features-section {
+      padding-block: 80px;
+      background: rgba(10, 14, 23, 0.4);
+      border-block: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .features-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      margin-top: 56px;
+    }
+
+    .feature-box {
+      background: var(--bg-card);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 40px;
+    }
+
+    .feature-box h3 {
+      font-family: var(--font-title);
+      font-size: 24px;
+      color: var(--color-white);
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .feature-box h3 svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--color-cyan-neon);
+    }
+
+    .feature-box p {
+      font-size: 15px;
+      color: var(--text-body);
+      margin: 0 0 24px 0;
+    }
+
+    .feature-box border {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .feature-list li {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      color: var(--color-white);
+    }
+
+    .feature-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--color-cyan-neon);
+      font-weight: bold;
+    }
+
+    /* Accessibility Highlight Panel */
+    .accessibility-banner {
+      margin-top: 64px;
+      background: linear-gradient(135deg, rgba(157, 0, 255, 0.1), rgba(255, 0, 127, 0.1));
+      border: 1px solid rgba(157, 0, 255, 0.3);
+      border-radius: 24px;
+      padding: 40px;
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .accessibility-banner h3 {
+      font-family: var(--font-title);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--color-white);
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .accessibility-banner h3 span {
+      color: var(--color-pink-neon);
+    }
+
+    .accessibility-banner p {
+      font-size: 15px;
+      color: var(--text-body);
+      margin: 0 0 16px 0;
+    }
+
+    /* Docs Navigation Section */
+    .docs-section {
+      padding-block: 80px;
+      text-align: center;
+    }
+
+    .docs-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .doc-link-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-decoration: none;
+      color: var(--text-body);
+      transition: var(--transition-fast);
+      display: block;
+    }
+
+    .doc-link-card h4 {
+      font-family: var(--font-title);
+      font-size: 18px;
+      color: var(--color-white);
+      margin: 0 0 8px 0;
+      transition: var(--transition-fast);
+    }
+
+    .doc-link-card p {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .doc-link-card:hover {
+      border-color: var(--color-cyan-neon);
+      transform: translateY(-4px);
+      background: rgba(27, 34, 60, 0.5);
+    }
+
+    .doc-link-card:hover h4 {
+      color: var(--color-cyan-neon);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--color-dark-950);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-block: 48px 32px;
+      text-align: center;
+    }
+
+    .footer-brand {
+      font-family: var(--font-title);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--color-white);
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .footer-links a {
+      color: var(--text-body);
+      text-decoration: none;
+      font-size: 14px;
+      transition: var(--transition-fast);
+    }
+
+    .footer-links a:hover {
+      color: var(--color-cyan-neon);
+    }
+
+    .copyright {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.3);
+      margin: 0;
+    }
+
+    /* Responsiveness */
+    @media (max-width: 992px) {
+      .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 48px;
+      }
+      .hero-content h1 {
+        font-size: 44px;
+      }
+      .hero-content p {
+        margin-inline: auto;
+      }
+      .hero-actions {
+        justify-content: center;
+      }
+      .features-split {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .accessibility-banner {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-nav {
+        height: auto;
+        padding-block: 16px;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .nav-links {
+        gap: 20px;
+      }
+      .hero-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+      .hero-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background glow filters -->
+  <div class="orb orb-cyan"></div>
+  <div class="orb orb-pink"></div>
+  <div class="orb orb-purple"></div>
+
+  <!-- Header Nav -->
+  <header>
+    <div class="container header-nav">
+      <a href="#" class="brand" id="nav-brand-logo">
+        FAMILY <span>Pic-In-Game</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#games" id="link-games">Arcade Suite</a>
+        <a href="#features" id="link-features">Key Engines</a>
+        <a href="#accessibility" id="link-a11y">Accessibility</a>
+        <a href="#docs" id="link-docs">Technical Docs</a>
+      </nav>
+      <a href="https://github.com/j4dy/net.j4dy.FamilyPicInGame.git" class="btn btn-cyan" id="header-btn-git">GitHub Code</a>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="container hero" id="section-hero">
+    <div class="hero-content">
+      <h1>Play Classic Games with <span>Your Family's Faces</span></h1>
+      <p>Transform family, friends, and pets into video game characters! 100% offline, privacy-respecting photo cropping directly inside a cross-platform Flutter mobile arcade ecosystem.</p>
+      <div class="hero-actions">
+        <a href="https://github.com/j4dy/net.j4dy.FamilyPicInGame.git" class="btn btn-pink" id="hero-btn-download">Get Mobile App</a>
+        <a href="#docs" class="btn btn-secondary" id="hero-btn-docs">Read Architecture Docs</a>
+      </div>
+    </div>
+    <div class="hero-mockup">
+      <img src="assets/app_showcase_mockup.png" alt="Family Pic-In-Game mobile screens showing Maze Chomp and Slingshot games" class="mockup-img" id="hero-showcase-image">
+    </div>
+  </section>
+
+  <!-- Arcade Games Grid -->
+  <section class="container games-section" id="games">
+    <h2 class="section-title" id="title-games">Neon Cyber Arcade Suite</h2>
+    <p class="section-desc">Five classic, fully integrated games featuring customizable participant roles and neon-themed canvas interfaces.</p>
+    
+    <div class="games-grid">
+      <!-- Slingshot -->
+      <div class="card" id="card-slingshot">
+        <div>
+          <div class="card-icon card-icon-pink">
+            <!-- Slingshot SVG -->
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          </div>
+          <h3>Family Slingshot</h3>
+          <p>Aim and launch family bird avatars using elastic cords to crash fortresses. Powered by Contact Normal velocity calculations, bird characters plow cleanly through wood and glass blocks with minimal speed decay.</p>
+        </div>
+        <span class="card-tag tag-pink">Physics Engine</span>
+      </div>
+
+      <!-- Pac-Man -->
+      <div class="card card-pink" id="card-pacman">
+        <div>
+          <div class="card-icon card-icon-cyan">
+            <!-- Pacman SVG -->
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.29 14.29L11 12.71V7h2v4.88l3.7 2.47-1.41 1.94z"/></svg>
+          </div>
+          <h3>Family Pac-Man</h3>
+          <p>Escape opponent family ghosts in a connected retro grid. Features Blinky, Pinky, Inky, and Clyde authentic pathfinding AI, frightening power pellets, wrap tunnels, and snapshot-safe copy collections to prevent CME crashes.</p>
+        </div>
+        <span class="card-tag tag-cyan">Arcade Grid</span>
+      </div>
+
+      <!-- Snake -->
+      <div class="card" id="card-snake">
+        <div>
+          <div class="card-icon card-icon-pink">
+            <!-- Snake SVG -->
+            <svg viewBox="0 0 24 24"><path d="M7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+          </div>
+          <h3>Family Nibbles</h3>
+          <p>Collect food to grow your snake body. Watch your segments alternate dynamically with other family faces! Integrates border portal ripple exit/entrance graphics and dual controller support (Swipes + precise D-Pad).</p>
+        </div>
+        <span class="card-tag tag-pink">Gesture & D-Pad</span>
+      </div>
+
+      <!-- Flappy Flight -->
+      <div class="card card-pink" id="card-flappy">
+        <div>
+          <div class="card-icon card-icon-cyan">
+            <!-- Flappy SVG -->
+            <svg viewBox="0 0 24 24"><path d="M10.18 9c-.39.26-.74.59-1.01.99L5 9.07v5.86l4.17-.92c.27.4.62.73 1.01.99l1.82 5.07h2l-1.82-5.07c.39-.26.74-.59 1.01-.99L19 14.93V9.07l-4.17.92c-.27-.4-.62-.73-1.01-.99L12.18 4h-2l1.82 5H10.18z"/></svg>
+          </div>
+          <h3>Flappy Flight</h3>
+          <p>Steer your custom astronaut capsule between neon obstacles. Includes 3 customizable gap difficulty levels: Space Cadet (Easy - 340 px), Pilot (Medium - 280 px), and Astronaut (Hard - 220 px) displayed on-screen.</p>
+        </div>
+        <span class="card-tag tag-cyan">Physics Scroll</span>
+      </div>
+
+      <!-- Whack-a-Monster -->
+      <div class="card" id="card-whack">
+        <div>
+          <div class="card-icon card-icon-pink">
+            <!-- Whack SVG -->
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+          </div>
+          <h3>Whack-a-Monster</h3>
+          <p>Tap neon opponent monsters appearing from 12 portal tunnels but avoid whacking your family teammates. Features speed selectors (1.0x Slow, 1.5x Normal, 2.0x Fast, 3.0x Insane) and multiplier combo point logic.</p>
+        </div>
+        <span class="card-tag tag-pink">Reaction Time</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Engines & Privacy -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <h2 class="section-title" id="title-features">Core Engines & Systems</h2>
+      <p class="section-desc">Designed using Flutter and Dart to run locally, efficiently, and with total privacy.</p>
+      
+      <div class="features-split">
+        <!-- Crop Engine -->
+        <div class="feature-box" id="box-crop-engine">
+          <h3>
+            <svg viewBox="0 0 24 24"><path d="M17 15h2V7c0-1.1-.9-2-2-2H9v2h8v8zM5 17c0 1.1.9 2 2 2h8v-2H7V9H5v8z"/></svg>
+            Circular Crop Engine
+          </h3>
+          <p>Integrates multi-touch gesture listeners to position character images safely behind an interactive cyan circular boundary mask.</p>
+          <ul class="feature-list">
+            <li>Modern permissionless image picker</li>
+            <li>Zero invasive storage read/write permissions</li>
+            <li>Native matrix-equivalent scaling and offset translation</li>
+            <li>Output downsampling to avoid memory crashes</li>
+          </ul>
+        </div>
+        
+        <!-- Local DB -->
+        <div class="feature-box" id="box-local-db">
+          <h3>
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+            Self-Sufficient Database
+          </h3>
+          <p>Stored profiles are structured in JSON arrays on SharedPreferences and written as PNGs inside the application's secure private folder.</p>
+          <ul class="feature-list">
+            <li>Automatic cartoon face drawing on first boot</li>
+            <li>Vibrant default character vectors loaded dynamically</li>
+            <li>Instant file deletions and database CRUD operations</li>
+            <li>Total data wipe upon uninstalling the application</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Accessibility Highlight -->
+      <div class="accessibility-banner" id="banner-a11y">
+        <div>
+          <h3>High-Readability <span>Upgrade</span></h3>
+        </div>
+        <div>
+          <p>To ensure comfortable play across all device sizes, we have optimized the interface layout. Buttons on the setup screens and in-game overlays are styled with a prominent <strong>22 logical pixels font size</strong> with expanded tap margins.</p>
+          <p>Additionally, obscure icon-only actions have been replaced by text buttons displaying <strong>RESET</strong> in 18 logical pixels bold text, making controls immediately clear and readable.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technical Docs Nav -->
+  <section class="container docs-section" id="docs">
+    <h2 class="section-title" id="title-docs">Technical Reference Library</h2>
+    <p class="section-desc">Detailed guides covering design architecture, game mechanics, and accessibility structures.</p>
+    
+    <div class="docs-links">
+      <a href="README.md" class="doc-link-card" id="doc-link-readme">
+        <h4>Overview Manual</h4>
+        <p>Main project manual, build steps, and system prerequisites.</p>
+      </a>
+      <a href="architecture.md" class="doc-link-card" id="doc-link-arch">
+        <h4>System Architecture</h4>
+        <p>Information on Dart packages, data flows, and game additions.</p>
+      </a>
+      <a href="features.md" class="doc-link-card" id="doc-link-features">
+        <h4>Physics & AI Manual</h4>
+        <p>Details on plowing physics, vector formulas, and ghost AI paths.</p>
+      </a>
+      <a href="accessibility.md" class="doc-link-card" id="doc-link-a11y">
+        <h4>UI Sizing & A11y</h4>
+        <p>Upgrade reports regarding font adjustments and touch targets.</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-brand">FAMILY Pic-In-Game</div>
+      <div class="footer-links">
+        <a href="README.md#🔒-privacy-policy" id="footer-link-privacy">Local Privacy Policy</a>
+        <a href="https://github.com/j4dy/net.j4dy.FamilyPicInGame.git" id="footer-link-repo">GitHub Repository</a>
+        <a href="#games" id="footer-link-games">Arcade Suite</a>
+      </div>
+      <p class="copyright">&copy; 2026 Family Pic-In-Game. Built natively with Flutter and Dart. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
