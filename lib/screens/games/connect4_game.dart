@@ -36,6 +36,7 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
   bool _gameStarted = false;
   bool _showResult = false;
   String _resultMessage = '';
+  int _gameSessionId = 0;
 
   // Animation for dropping pieces
   late AnimationController _dropController;
@@ -110,11 +111,13 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
 
   void _startGame() {
     setState(() {
+      _gameSessionId++;
       _gameState.reset();
       _gameStarted = true;
       _showResult = false;
       _hoverColumn = null;
       _isAiThinking = false;
+      _isAnimating = false;
     });
   }
 
@@ -126,6 +129,8 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
       return;
     }
 
+    final sessionId = _gameSessionId;
+
     final result = _gameState.dropInColumn(col);
     if (result != DropResult.ok) return;
 
@@ -133,7 +138,10 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
     _animatingCol = col;
     _animatingRow = _gameState.lastRow!;
     _isAnimating = true;
-    await _dropController.forward(from: 0.0);
+    try {
+      await _dropController.forward(from: 0.0);
+    } catch (_) {}
+    if (!mounted || _gameSessionId != sessionId) return;
     _isAnimating = false;
 
     setState(() {}); // refresh board
@@ -146,7 +154,9 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
 
     // AI turn
     _isAiThinking = true;
+    setState(() {});
     await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted || _gameSessionId != sessionId) return;
 
     final aiCol = _gameState.computeAiMove();
     if (aiCol < 0) return;
@@ -155,7 +165,10 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
     _animatingCol = aiCol;
     _animatingRow = _gameState.lastRow!;
     _isAnimating = true;
-    await _dropController.forward(from: 0.0);
+    try {
+      await _dropController.forward(from: 0.0);
+    } catch (_) {}
+    if (!mounted || _gameSessionId != sessionId) return;
     _isAnimating = false;
 
     _isAiThinking = false;
@@ -197,25 +210,37 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
         ),
       );
     }
+    final hasImage = profile.imagePath.isNotEmpty && File(profile.imagePath).existsSync();
     return ClipOval(
-      child: Image.file(
-        File(profile.imagePath),
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: cardSlate,
-              shape: BoxShape.circle,
-              border: Border.all(color: softGrey, width: 1),
+      child: hasImage
+          ? Image.file(
+              File(profile.imagePath),
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    color: cardSlate,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: softGrey, width: 1),
+                  ),
+                  child: const Icon(Icons.face, color: softGrey, size: 20),
+                );
+              },
+            )
+          : Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: cardSlate,
+                shape: BoxShape.circle,
+                border: Border.all(color: softGrey, width: 1),
+              ),
+              child: const Icon(Icons.face, color: softGrey, size: 20),
             ),
-            child: const Icon(Icons.face, color: softGrey, size: 20),
-          );
-        },
-      ),
     );
   }
 
@@ -638,6 +663,7 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
     } else {
       final face = cell == Connect4Cell.playerA ? _playerFace : _aiFace;
       final size = _chipRadius * 2;
+      final hasImage = face != null && face.imagePath.isNotEmpty && File(face.imagePath).existsSync();
 
       Widget faceChip = Container(
         decoration: BoxDecoration(
@@ -662,9 +688,9 @@ class _Connect4GameScreenState extends State<Connect4GameScreen>
                 ],
         ),
         child: ClipOval(
-          child: face != null
+          child: hasImage
               ? Image.file(
-                  File(face.imagePath),
+                  File(face!.imagePath),
                   width: size,
                   height: size,
                   fit: BoxFit.cover,
