@@ -13,7 +13,7 @@ Use the links below to explore specific technical and user guides for the projec
    * Model definitions and local data persistence flows (JSON mapping).
    * Guide on how to register and extend new games.
 2. **[Game Features & Mechanics](features.md)**
-   * Complete mechanics and gameplay parameters for all 5 games (**Slingshot, Snake, Flappy Flight, Whack-a-Monster, Pac-Man**).
+   * Complete mechanics and gameplay parameters for all 6 games (**Connect 4, Slingshot, Snake, Flappy Flight, Whack-a-Monster, Pac-Man**).
    * Physics equations, collision vectors, pathfinding AI, and custom settings.
 3. **[Accessibility & Readability Upgrades](accessibility.md)**
    * Detailed breakdown of the font size (enlarged to `22.sp` / equivalent Flutter logical pixels) and button layout enhancements.

@@ -12,9 +12,16 @@ import 'screens/games/snake_game.dart';
 import 'screens/games/flappy_game.dart';
 import 'screens/games/whack_game.dart';
 import 'screens/games/pacman_game.dart';
+import 'screens/games/connect4_game.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Set custom error widget to show crash logs on screen in all modes
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return MaterialApplicationErrorScreen(details: details);
+  };
+
   // Set preferred orientations initially to portrait only
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -22,6 +29,56 @@ void main() {
   ]).then((_) {
     runApp(const MyApp());
   });
+}
+
+class MaterialApplicationErrorScreen extends StatelessWidget {
+  final FlutterErrorDetails details;
+  const MaterialApplicationErrorScreen({super.key, required this.details});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: const Color(0xFF1A0000),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "🔴 APP CRASH DETECTED",
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  details.exception.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  details.stack.toString(),
+                  style: const TextStyle(
+                    color: Color(0xFFFFAAAA),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -47,7 +104,8 @@ enum AppScreen {
   gameSnake,
   gameFlappy,
   gameWhack,
-  gamePacman
+  gamePacman,
+  gameConnect4
 }
 
 class MainNavigator extends StatefulWidget {
@@ -63,6 +121,12 @@ class _MainNavigatorState extends State<MainNavigator> {
   File? _selectedPhotoFile;
 
   final List<GameDescriptor> _gamesList = const [
+    GameDescriptor(
+      id: 'connect4',
+      title: 'Family Connect 4',
+      description: 'Drop your family face tokens into the grid. First to line up 4 in a row wins!',
+      route: 'connect4_game',
+    ),
     GameDescriptor(
       id: 'slingshot',
       title: 'Family Slingshot',
@@ -108,8 +172,14 @@ class _MainNavigatorState extends State<MainNavigator> {
         _faceStorage = storage;
         _currentScreen = AppScreen.home;
       });
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error initializing app: $e');
+      FlutterError.reportError(FlutterErrorDetails(
+        exception: e,
+        stack: stack,
+        library: 'app initialization',
+        context: ErrorDescription('while initializing FaceStorage'),
+      ));
     }
   }
 
@@ -135,6 +205,9 @@ class _MainNavigatorState extends State<MainNavigator> {
         break;
       case 'pacman':
         _navigateToScreen(AppScreen.gamePacman);
+        break;
+      case 'connect4':
+        _navigateToScreen(AppScreen.gameConnect4);
         break;
     }
   }
@@ -232,6 +305,12 @@ class _MainNavigatorState extends State<MainNavigator> {
 
       case AppScreen.gamePacman:
         return PacmanGameScreen(
+          faceStorage: _faceStorage!,
+          onBackClick: () => _navigateToScreen(AppScreen.home),
+        );
+
+      case AppScreen.gameConnect4:
+        return Connect4GameScreen(
           faceStorage: _faceStorage!,
           onBackClick: () => _navigateToScreen(AppScreen.home),
         );

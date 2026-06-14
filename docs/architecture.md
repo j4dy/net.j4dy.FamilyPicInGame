@@ -22,6 +22,7 @@ lib/
 │   ├── face_manager_screen.dart  # Circular avatar management grid
 │   ├── face_crop_screen.dart     # Interactive touch-based circular crop utility
 │   └── games/                    # UI screens for each game
+│       ├── connect4_game.dart
 │       ├── slingshot_game.dart
 │       ├── snake_game.dart
 │       ├── flappy_game.dart
@@ -30,6 +31,7 @@ lib/
 └── games/
     ├── common/
     │   └── vector_2d.dart        # 2D geometry vector math utilities
+    ├── connect4/                 # Connect 4 pure game logic state models
     ├── slingshot/                # Slingshot physics state models
     ├── snake/                    # Snake game grid state models
     ├── flappy/                   # Flappy Flight physics models

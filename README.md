@@ -1,6 +1,6 @@
 # 🎮 Family Pic-in-Game Mobile Arcade App
 
-A premium, interactive cross-platform mobile application written entirely in **Dart** and built with modern **Flutter**. Players can crop circular photos of family members, friends, or pets directly from their device’s photo library and use them as active characters in classic games (including slingshot physics, retro snake eating, space flappy flight, Whack-a-Monster, and Pac-Man)!
+A premium, interactive cross-platform mobile application written entirely in **Dart** and built with modern **Flutter**. Players can crop circular photos of family members, friends, or pets directly from their device’s photo library and use them as active characters in classic games (including Connect 4 strategy, slingshot physics, retro snake eating, space flappy flight, Whack-a-Monster, and Pac-Man)!
 
 The app is styled with a futuristic, dark-mode neon cyberpunk design (deep cosmic slate, neon cyan, magenta, and electric purple glow) and uses custom canvas-drawn game loops and physics engines.
 
@@ -17,27 +17,31 @@ The app is styled with a futuristic, dark-mode neon cyberpunk design (deep cosmi
 * **Staggered Cards Grid**: View, add, or delete your customized character heads.
 * **Dynamic Vector Avatars**: If no custom photos are configured, the database automatically draws 4 cute cartoon faces (an angry red bird, a blue bird, a green pig, and a blue cookie monster) programmatically on a canvas and writes them as PNGs, ensuring a rich visual experience immediately upon first boot!
 
-### 3. Family Slingshot (Physics-Based)
+### 3. Family Connect 4 (Turn-Based Strategy)
+* **Strategic Heuristics**: Drop custom family tokens into a 6x7 grid, playing against an AI that block-moves or center-aligns strategically.
+* **Animated Feedback**: Drops slide down columns with a bounce curve, and winning tokens pulse using a scale loop.
+
+### 4. Family Slingshot (Physics-Based)
 * **High-Impact Velocity & Deflection**: Features dynamic slingshot physics where bird characters plow through wood and glass blocks.
 * **Plow-Through Block Demolition**: Velocity calculations contacto normal splits components: $v_{ref} = v - (1 + e)(v \cdot n)n$ (mixing 80% forward momentum with 20% reflected contact normal). Glass blocks decay speed by 10%, wood blocks by 20%.
 * **Falling Debris & Gravity**: Supporting obstacle blocks fall down realistically under gravity when pillars beneath them are destroyed, settling onto lower blocks and squashing targets.
 * **Trajectory Prediction**: Aiming elastic neon cords draw a dotted aim trajectory for 120 simulation frames.
 * **Level Progression**: Includes 3 distinct levels ("Twin Towers", "Pyramid Arch", and "Multi-Layer Fort") with custom architectural layouts.
 
-### 4. Family Nibbles (Snake Style)
+### 5. Family Nibbles (Snake Style)
 * **Alternating Family Body Parts**: Select who is the snake head and who is the food. When the head eats food, the snake grows and **alternates its body segments using all the other cropped faces in your manager!**
 * **Portal Ripple Boundaries**: When the snake head touches a boundary wall, it wraps to the other side of the grid. Connectors are hidden during wrap frames. Wraps trigger dual-color ripples (Electric Cyan at exit, Neon Pink at entrance) and sparkles.
 * **Dual Controllers**: Swipe gestures on the grid, or use a high-precision visual overlay D-Pad control dock.
 
-### 5. Family Flappy Flight
+### 6. Family Flappy Flight
 * **Difficulty Settings**: Features gap difficulties: Space Cadet (Easy - 340 px), Pilot (Medium - 280 px), and Astronaut (Hard - 220 px).
 * **Backpack Spacesuits**: Draws character faces inside astronaut helmets with capsules flying through scrolling stars.
 
-### 6. Whack-a-Monster
+### 7. Whack-a-Monster
 * **Reaction Grid**: Whack neon opponent monsters (Neon Pink) from 12 portal tunnels but avoid whacking your family teammates (Electric Cyan).
 * **Speed Customizations**: Supports 1.0x Slow, 1.5x Normal, 2.0x Fast, and 3.0x Insane multipliers.
 
-### 7. Family Pac-Man
+### 8. Family Pac-Man
 * **Connected Maze**: Eat pellets inside a blue neon connected maze outline.
 * **Authentic Ghost AI**: Blinky (chase), Pinky (ambush), Inky (mirror), and Clyde (scatter) navigate paths natively.
 * **Safe Copy Iterations**: Snapshot-safe copy lists are iterated during player-ghost collisions to prevent thread concurrency crashes.
@@ -71,6 +75,7 @@ lib/
 │   ├── face_manager_screen.dart  # Staggered grid view of faces
 │   ├── face_crop_screen.dart     # Interactive touch-based circular crop utility
 │   └── games/                    # Game UI Screens
+│       ├── connect4_game.dart
 │       ├── slingshot_game.dart
 │       ├── snake_game.dart
 │       ├── flappy_game.dart
@@ -79,6 +84,7 @@ lib/
 └── games/
     ├── common/
     │   └── vector_2d.dart        # 2D algebra physics helper
+    ├── connect4/                 # Connect 4 game grid state models
     ├── slingshot/                # Slingshot physics state models
     ├── snake/                    # Snake game grid state models
     ├── flappy/                   # Flappy Flight physics models

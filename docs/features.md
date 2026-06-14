@@ -1,10 +1,23 @@
 # 🕹️ Game Features & Mechanics Guide
 
-Each game inside the suite is rendered on a hardware-accelerated Flutter `CustomPaint` Canvas with separate tick loops and state models. Here are the core mechanics of each of the 5 games:
+Each game inside the suite is rendered on a hardware-accelerated Flutter `CustomPaint` Canvas with separate tick loops and state models. Here are the core mechanics of each of the 6 games:
 
 ---
 
-## ☄️ 1. Family Slingshot (Physics-Based)
+## 🔵 1. Family Connect 4 (Turn-Based Strategy)
+
+Drop your family face tokens into the grid to line up four in a row:
+
+* **Grid & Gameplay**: Standard 6-row by 7-column vertical board. Players drop face tokens which fall to the lowest available space in the chosen column.
+* **Turn-Based AI Opponent**: Play against a strategic computer player. The AI evaluates possible moves to:
+  1. Win immediately if a winning move is available.
+  2. Block the opponent's winning lines.
+  3. Favor center-aligned columns for optimal positioning (calculated using distance heuristics and random tiebreaks).
+* **Fluid Physics & Visuals**: Chip drops are animated dynamically using a custom bounce-out curve controller, and winning lines are highlighted by scaled pulsing animations.
+
+---
+
+## ☄️ 2. Family Slingshot (Physics-Based)
 
 Launch your family birds using an elastic slingshot to crash wood and glass fortifications and knock down target opponents:
 
@@ -17,7 +30,7 @@ Launch your family birds using an elastic slingshot to crash wood and glass fort
 
 ---
 
-## 🐍 2. Family Nibbles (Snake Game)
+## 🐍 3. Family Nibbles (Snake Game)
 
 Steer the snake head through a wrapping grid to collect food, accumulating family member faces in your body tail:
 
@@ -27,7 +40,7 @@ Steer the snake head through a wrapping grid to collect food, accumulating famil
 
 ---
 
-## 🚀 3. Family Flappy Flight
+## 🚀 4. Family Flappy Flight
 
 Guide your rocket-capsule family astronaut between neon pillars in space:
 
@@ -39,7 +52,7 @@ Guide your rocket-capsule family astronaut between neon pillars in space:
 
 ---
 
-## 👽 4. Whack-a-Monster
+## 👽 5. Whack-a-Monster
 
 Test your reaction speed by whacking pop-up opponent monsters while avoiding whacking your family members:
 
@@ -48,7 +61,7 @@ Test your reaction speed by whacking pop-up opponent monsters while avoiding wha
 
 ---
 
-## 👻 5. Family Pac-Man
+## 👻 6. Family Pac-Man
 
 Munch pellets inside a retro blue neon maze while escaping family ghosts:
 
