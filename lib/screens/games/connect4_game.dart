@@ -21,7 +21,7 @@ class Connect4GameScreen extends StatefulWidget {
 }
 
 class _Connect4GameScreenState extends State<Connect4GameScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late Connect4GameState _gameState;
   late List<FaceProfile> _profiles;
 
